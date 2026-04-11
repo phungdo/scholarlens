@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScholarLens — Academic Paper Quality Checker</title>
+  <meta name="description" content="Instantly check journal rankings, conference rankings, and author h-index from a DOI or uploaded PDF. Free tool powered by OpenAlex.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="core_rankings.js"></script>
+  <style>
+    /* ===================== DESIGN SYSTEM ===================== */
+    :root {
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.7);
+      --bg-card-hover: rgba(31, 41, 55, 0.8);
+      --bg-glass: rgba(255, 255, 255, 0.03);
+      --bg-input: rgba(255, 255, 255, 0.05);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.5);
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --accent-indigo: #6366f1;
+      --accent-indigo-light: #818cf8;
+      --accent-violet: #8b5cf6;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-cyan: #06b6d4;
+      --accent-blue: #3b82f6;
+      --gradient-hero: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
+      --gradient-card: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+      --gradient-astar: linear-gradient(135deg, #f59e0b, #f97316);
+      --gradient-a: linear-gradient(135deg, #10b981, #059669);
+      --gradient-b: linear-gradient(135deg, #3b82f6, #2563eb);
+      --gradient-c: linear-gradient(135deg, #6b7280, #4b5563);
+      --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.15);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ===================== RESET & BASE ===================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 50%, rgba(139, 92, 246, 0.08), transparent),
+        radial-gradient(ellipse 50% 60% at 20% 80%, rgba(6, 182, 212, 0.06), transparent);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ===================== LAYOUT ===================== */
+    .app-container {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+
+    /* ===================== HEADER ===================== */
+    .header {
+      text-align: center;
+      padding: 48px 0 40px;
+    }
+
+    .logo-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .logo-icon {
+      width: 52px;
+      height: 52px;
+      background: var(--gradient-hero);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .logo-text {
+      font-size: 36px;
+      font-weight: 800;
+      background: var(--gradient-hero);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -1px;
+    }
+
+    .tagline {
+      color: var(--text-secondary);
+      font-size: 16px;
+      font-weight: 400;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .tagline strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* ===================== INPUT SECTION ===================== */
+    .input-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 32px;
+    }
+
+    .input-tabs {
+      display: flex;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: var(--radius-md);
+      padding: 4px;
+      margin-bottom: 24px;
+    }
+
+    .input-tab {
+      flex: 1;
+      padding: 12px 20px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .input-tab.active {
+      background: var(--accent-indigo);
+      color: white;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .input-tab:not(.active):hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-primary);
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* DOI Input */
+    .doi-input-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    .doi-input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    .doi-input-wrapper .input-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 18px;
+      pointer-events: none;
+    }
+
+    #doi-input {
+      width: 100%;
+      padding: 16px 16px 16px 48px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      transition: var(--transition);
+      outline: none;
+    }
+
+    #doi-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    #doi-input::placeholder {
+      color: var(--text-muted);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-primary {
+      padding: 16px 32px;
+      background: var(--gradient-hero);
+      border: none;
+      border-radius: var(--radius-md);
+      color: white;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* PDF Drop Zone */
+    .drop-zone {
+      border: 2px dashed var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 48px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .drop-zone::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--gradient-card);
+      opacity: 0;
+      transition: var(--transition);
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      border-color: var(--accent-indigo);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .drop-zone:hover::before,
+    .drop-zone.dragover::before {
+      opacity: 1;
+    }
+
+    .drop-zone-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .drop-zone-text {
+      color: var(--text-secondary);
+      font-size: 15px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .drop-zone-text strong {
+      color: var(--accent-indigo-light);
+    }
+
+    .drop-zone-hint {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    #pdf-file-input { display: none; }
+
+    .pdf-filename {
+      margin-top: 12px;
+      color: var(--accent-emerald);
+      font-size: 14px;
+      font-weight: 500;
+      display: none;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Quick examples */
+    .quick-examples {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .quick-examples-label {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .example-chip {
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .example-chip:hover {
+      background: rgba(99, 102, 241, 0.1);
+      border-color: var(--accent-indigo);
+      color: var(--accent-indigo-light);
+    }
+
+    /* ===================== LOADING STATE ===================== */
+    .loading-overlay {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .loading-overlay.active { display: block; }
+
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border-subtle);
+      border-top-color: var(--accent-indigo);
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    .loading-step {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 8px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ===================== ERROR STATE ===================== */
+    .error-banner {
+      display: none;
+      background: rgba(244, 63, 94, 0.1);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      color: var(--accent-rose);
+      font-size: 14px;
+    }
+
+    .error-banner.active { display: flex; gap: 10px; align-items: flex-start; }
+    .error-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ===================== RESULTS SECTION ===================== */
+    #results-section {
+      display: none;
+    }
+
+    #results-section.active {
+      display: block;
+      animation: fadeInUp 0.5s ease;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Paper Header Card */
+    .paper-header-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      margin-bottom: 24px;
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .paper-header-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--gradient-hero);
+    }
+
+    .paper-title-text {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .paper-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .meta-item .meta-icon {
+      font-size: 14px;
+    }
+
+    .paper-doi-link {
+      color: var(--accent-indigo-light);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .paper-doi-link:hover {
+      color: var(--accent-violet);
+      text-decoration: underline;
+    }
+
+    .paper-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-journal {
+      background: rgba(99, 102, 241, 0.15);
+      color: var(--accent-indigo-light);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .badge-conference {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-amber);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .badge-preprint {
+      background: rgba(107, 114, 128, 0.15);
+      color: var(--text-secondary);
+      border: 1px solid rgba(107, 114, 128, 0.3);
+    }
+
+    .badge-repository {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      backdrop-filter: blur(20px);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric-card:hover {
+      border-color: rgba(99, 102, 241, 0.3);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-glow);
+    }
+
+    .metric-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .metric-card-title {
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-card-icon {
+      font-size: 20px;
+    }
+
+    .metric-value {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 4px;
+    }
+
+    .metric-value.gradient-text {
+      background: var(--gradient-hero);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .metric-label {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .metric-detail {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .metric-detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .metric-detail-key {
+      color: var(--text-muted);
+    }
+
+    .metric-detail-val {
+      color: var(--text-primary);
+      font-weight: 500;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Rank Badges */
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-md);
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: white;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    .rank-badge.rank-astar { background: var(--gradient-astar); }
+    .rank-badge.rank-a { background: var(--gradient-a); }
+    .rank-badge.rank-b { background: var(--gradient-b); }
+    .rank-badge.rank-c { background: var(--gradient-c); }
+
+    .rank-badge-large {
+      width: auto;
+      height: auto;
+      padding: 8px 20px;
+      font-size: 28px;
+    }
+
+    /* CORE Conference Card - special style */
+    .conference-rank-display {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .conference-rank-info {
+      flex: 1;
+    }
+
+    .conference-rank-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .conference-rank-source {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    /* Author Cards */
+    .authors-section {
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .authors-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .author-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      transition: var(--transition);
+    }
+
+    .author-card:hover {
+      border-color: rgba(139, 92, 246, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .author-position {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent-violet);
+      margin-bottom: 8px;
+    }
+
+    .author-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .author-institution {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .author-metrics {
+      display: flex;
+      gap: 20px;
+    }
+
+    .author-metric {
+      text-align: center;
+    }
+
+    .author-metric-value {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent-violet);
+    }
+
+    .author-metric-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .author-links {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .author-link {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      text-decoration: none;
+      transition: var(--transition);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+    }
+
+    .author-link:hover {
+      background: rgba(99, 102, 241, 0.1);
+      border-color: var(--accent-indigo);
+      color: var(--accent-indigo-light);
+    }
+
+    /* Quick Links */
+    .quick-links-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      padding: 24px 32px;
+      margin-bottom: 24px;
+    }
+
+    .quick-links-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .quick-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-size: 14px;
+      text-decoration: none;
+      transition: var(--transition);
+      font-weight: 500;
+    }
+
+    .quick-link:hover {
+      background: rgba(99, 102, 241, 0.1);
+      border-color: var(--accent-indigo);
+      color: var(--accent-indigo-light);
+      transform: translateY(-1px);
+    }
+
+    .quick-link .link-icon {
+      font-size: 16px;
+    }
+
+    /* ===================== HISTORY SECTION ===================== */
+    .history-section {
+      margin-top: 32px;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .history-clear-btn {
+      padding: 6px 14px;
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .history-clear-btn:hover {
+      background: rgba(244, 63, 94, 0.1);
+      border-color: var(--accent-rose);
+      color: var(--accent-rose);
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .history-item:hover {
+      border-color: rgba(99, 102, 241, 0.3);
+      background: var(--bg-card-hover);
+    }
+
+    .history-item-rank {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      color: white;
+    }
+
+    .history-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .history-item-title {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-item-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-item-time {
+      color: var(--text-muted);
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .empty-history {
+      text-align: center;
+      padding: 32px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* ===================== OPEN ACCESS BADGE ===================== */
+    .oa-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .oa-gold {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-amber);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .oa-green {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .oa-bronze {
+      background: rgba(217, 119, 6, 0.15);
+      color: #d97706;
+      border: 1px solid rgba(217, 119, 6, 0.3);
+    }
+
+    .oa-closed {
+      background: rgba(107, 114, 128, 0.15);
+      color: var(--text-muted);
+      border: 1px solid rgba(107, 114, 128, 0.3);
+    }
+
+    /* Citation Percentile Bar */
+    .percentile-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 3px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .percentile-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--gradient-hero);
+      transition: width 1s ease;
+    }
+
+    /* ===================== RESPONSIVE ===================== */
+    @media (max-width: 768px) {
+      .app-container { padding: 16px 12px 40px; }
+      .header { padding: 32px 0 24px; }
+      .logo-text { font-size: 28px; }
+      .input-section { padding: 20px; }
+      .doi-input-group { flex-direction: column; }
+      .metrics-grid { grid-template-columns: 1fr; }
+      .authors-grid { grid-template-columns: 1fr; }
+      .paper-header-card { padding: 20px; }
+      .quick-links-section { padding: 20px; }
+      .quick-examples { justify-content: center; }
+    }
+
+    @media (max-width: 480px) {
+      .input-tabs { flex-direction: column; }
+      .paper-meta { gap: 8px; }
+      .conference-rank-display { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ===================== FOOTER ===================== */
+    .footer {
+      text-align: center;
+      padding: 32px 0 16px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .footer a {
+      color: var(--accent-indigo-light);
+      text-decoration: none;
+    }
+
+    .footer a:hover { text-decoration: underline; }
+
+    /* ===================== TOPIC BADGES ===================== */
+    .topics-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .topic-badge {
+      padding: 3px 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* Source type indicator */
+    .source-type-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- HEADER -->
+    <header class="header" id="header">
+      <div class="logo-wrapper">
+        <div class="logo-icon">🔬</div>
+        <span class="logo-text">ScholarLens</span>
+      </div>
+      <p class="tagline">
+        Instantly check <strong>journal rankings</strong>, <strong>conference rankings</strong>, 
+        and <strong>author h-index</strong> from a DOI or uploaded PDF
+      </p>
+    </header>
+
+    <!-- INPUT SECTION -->
+    <section class="input-section" id="input-section">
+      <div class="input-tabs">
+        <button class="input-tab active" data-tab="doi-tab" id="doi-tab-btn" onclick="switchTab('doi-tab')">
+          🔗 DOI Lookup
+        </button>
+        <button class="input-tab" data-tab="pdf-tab" id="pdf-tab-btn" onclick="switchTab('pdf-tab')">
+          📄 Upload PDF
+        </button>
+      </div>
+
+      <!-- DOI Tab -->
+      <div class="tab-content active" id="doi-tab">
+        <div class="doi-input-group">
+          <div class="doi-input-wrapper">
+            <span class="input-icon">🔗</span>
+            <input type="text" id="doi-input" 
+                   placeholder="Paste DOI, e.g. 10.1371/journal.pone.0313495"
+                   autocomplete="off" spellcheck="false">
+          </div>
+          <button class="btn-primary" id="lookup-btn" onclick="handleDOILookup()">
+            <span>🔍</span> Lookup
+          </button>
+        </div>
+        <div class="quick-examples">
+          <span class="quick-examples-label">Try:</span>
+          <button class="example-chip" onclick="fillDOI('10.1371/journal.pone.0313495')">PLoS ONE</button>
+          <button class="example-chip" onclick="fillDOI('10.1145/3292500.3330701')">KDD 2019</button>
+          <button class="example-chip" onclick="fillDOI('10.1038/s41586-021-03819-2')">Nature</button>
+          <button class="example-chip" onclick="fillDOI('10.1109/CVPR52688.2022.00024')">CVPR 2022</button>
+          <button class="example-chip" onclick="fillDOI('10.1016/j.trc.2023.104246')">Trans Res C</button>
+        </div>
+      </div>
+
+      <!-- PDF Tab -->
+      <div class="tab-content" id="pdf-tab">
+        <div class="drop-zone" id="drop-zone" 
+             ondragover="handleDragOver(event)" 
+             ondragleave="handleDragLeave(event)" 
+             ondrop="handleDrop(event)"
+             onclick="document.getElementById('pdf-file-input').click()">
+          <div class="drop-zone-icon">📄</div>
+          <div class="drop-zone-text">
+            <strong>Drop a PDF here</strong> or click to browse
+          </div>
+          <div class="drop-zone-hint">We'll extract the DOI automatically from the PDF text</div>
+          <div class="pdf-filename" id="pdf-filename"></div>
+        </div>
+        <input type="file" id="pdf-file-input" accept=".pdf" onchange="handleFileSelect(event)">
+      </div>
+    </section>
+
+    <!-- Error Banner -->
+    <div class="error-banner" id="error-banner">
+      <span class="error-icon">⚠️</span>
+      <span id="error-text"></span>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="loading-overlay">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Analyzing paper...</div>
+      <div class="loading-step" id="loading-step">Querying OpenAlex API...</div>
+    </div>
+
+    <!-- Results -->
+    <section id="results-section">
+      <!-- Paper Header -->
+      <div class="paper-header-card" id="paper-header-card">
+        <div id="paper-header-content"></div>
+      </div>
+
+      <!-- Metrics Grid -->
+      <div class="metrics-grid" id="metrics-grid"></div>
+
+      <!-- Authors -->
+      <div class="authors-section" id="authors-section">
+        <div class="section-title">👤 Author Profiles</div>
+        <div class="authors-grid" id="authors-grid"></div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="quick-links-section" id="quick-links-section">
+        <div class="section-title">🔗 External Resources</div>
+        <div class="quick-links-grid" id="quick-links-grid"></div>
+      </div>
+    </section>
+
+    <!-- History -->
+    <section class="history-section" id="history-section">
+      <div class="history-header">
+        <div class="section-title">📜 Recent Lookups</div>
+        <button class="history-clear-btn" id="history-clear-btn" onclick="clearHistory()">Clear all</button>
+      </div>
+      <div class="history-list" id="history-list"></div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Powered by <a href="https://openalex.org" target="_blank">OpenAlex</a> • 
+         Conference rankings from <a href="https://portal.core.edu.au" target="_blank">CORE Portal</a> •
+         Built for researchers 🎓</p>
+    </footer>
+  </div>
+
+  <script>
+    // ===================== CONFIGURATION =====================
+    const OPENALEX_EMAIL = 'scholarlens@research.tools';
+    const OPENALEX_BASE = 'https://api.openalex.org';
+
+    // PDF.js worker
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    // ===================== TAB SWITCHING =====================
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.input-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    }
+
+    // ===================== DOI HELPERS =====================
+    function cleanDOI(input) {
+      let doi = input.trim();
+      // Remove common prefixes
+      doi = doi.replace(/^https?:\/\/(dx\.)?doi\.org\//i, '');
+      doi = doi.replace(/^doi:\s*/i, '');
+      doi = doi.replace(/^DOI:\s*/i, '');
+      // Remove trailing periods or whitespace
+      doi = doi.replace(/[\s.]+$/, '');
+      return doi;
+    }
+
+    function isValidDOI(doi) {
+      return /^10\.\d{4,9}\/[^\s]+$/.test(doi);
+    }
+
+    function fillDOI(doi) {
+      document.getElementById('doi-input').value = doi;
+      handleDOILookup();
+    }
+
+    // ===================== PDF HANDLING =====================
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('drop-zone').classList.add('dragover');
+    }
+
+    function handleDragLeave(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('drop-zone').classList.remove('dragover');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('drop-zone').classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0 && files[0].type === 'application/pdf') {
+        processPDF(files[0]);
+      } else {
+        showError('Please drop a PDF file.');
+      }
+    }
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) processPDF(file);
+    }
+
+    async function processPDF(file) {
+      const filenameEl = document.getElementById('pdf-filename');
+      filenameEl.textContent = `📎 ${file.name}`;
+      filenameEl.style.display = 'block';
+
+      showLoading('Extracting text from PDF...');
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = '';
+
+        // Extract text from first 3 pages (DOI is usually on first page)
+        const maxPages = Math.min(pdf.numPages, 3);
+        for (let i = 1; i <= maxPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join(' ');
+          fullText += pageText + ' ';
+        }
+
+        // Find DOI using regex
+        const doiRegex = /10\.\d{4,9}\/[^\s\]"'>)},;]+/gi;
+        const matches = fullText.match(doiRegex);
+
+        if (matches && matches.length > 0) {
+          // Clean up the DOI (remove trailing punctuation)
+          let doi = matches[0].replace(/[.,;:)\]]+$/, '');
+          document.getElementById('doi-input').value = doi;
+          switchTab('doi-tab');
+          await performLookup(doi);
+        } else {
+          hideLoading();
+          showError('Could not find a DOI in this PDF. Try pasting the DOI manually.');
+        }
+      } catch (err) {
+        hideLoading();
+        showError(`Error reading PDF: ${err.message}`);
+      }
+    }
+
+    // ===================== API CALLS =====================
+    async function fetchOpenAlex(endpoint) {
+      const separator = endpoint.includes('?') ? '&' : '?';
+      const url = `${OPENALEX_BASE}${endpoint}${separator}mailto=${OPENALEX_EMAIL}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`OpenAlex API error: ${response.status}`);
+      return response.json();
+    }
+
+    async function fetchCrossRef(doi) {
+      const url = `https://api.crossref.org/works/${encodeURIComponent(doi)}`;
+      const response = await fetch(url, {
+        headers: { 'User-Agent': 'ScholarLens/1.0 (mailto:scholarlens@research.tools)' }
+      });
+      if (!response.ok) throw new Error(`CrossRef API error: ${response.status}`);
+      return response.json();
+    }
+
+    // ===================== MAIN LOOKUP =====================
+    async function handleDOILookup() {
+      const input = document.getElementById('doi-input').value;
+      const doi = cleanDOI(input);
+
+      if (!doi) {
+        showError('Please enter a DOI.');
+        return;
+      }
+
+      if (!isValidDOI(doi)) {
+        showError(`"${doi}" doesn't look like a valid DOI. Format: 10.XXXX/...`);
+        return;
+      }
+
+      await performLookup(doi);
+    }
+
+    async function performLookup(doi) {
+      hideError();
+      hideResults();
+      showLoading('Querying OpenAlex API...');
+
+      try {
+        // Step 1: Get work data from OpenAlex
+        setLoadingStep('Fetching paper metadata...');
+        let workData;
+        try {
+          workData = await fetchOpenAlex(`/works/doi:${doi}`);
+        } catch (e) {
+          throw new Error(`Paper not found in OpenAlex for DOI: ${doi}. This DOI may be very new or incorrect.`);
+        }
+
+        // Step 2: Get source (journal/conference) data
+        setLoadingStep('Fetching journal/conference info...');
+        let sourceData = null;
+        const sourceId = workData.primary_location?.source?.id;
+        if (sourceId) {
+          try {
+            const sourceOAId = sourceId.replace('https://openalex.org/', '');
+            sourceData = await fetchOpenAlex(`/sources/${sourceOAId}`);
+          } catch (e) {
+            console.warn('Could not fetch source data:', e);
+          }
+        }
+
+        // Step 3: Get author data (first + last authors)
+        setLoadingStep('Fetching author profiles...');
+        const authorInfos = [];
+        const authorships = workData.authorships || [];
+        const keyAuthors = [];
+        if (authorships.length > 0) keyAuthors.push(authorships[0]);
+        if (authorships.length > 1) keyAuthors.push(authorships[authorships.length - 1]);
+        // Also get corresponding author if different
+        const correspondingId = workData.corresponding_author_ids?.[0];
+        if (correspondingId) {
+          const corrAuthor = authorships.find(a => a.author?.id === correspondingId);
+          if (corrAuthor && !keyAuthors.includes(corrAuthor)) {
+            keyAuthors.push(corrAuthor);
+          }
+        }
+
+        for (const authorship of keyAuthors) {
+          const authorId = authorship.author?.id;
+          if (authorId) {
+            try {
+              const authorOAId = authorId.replace('https://openalex.org/', '');
+              const authorData = await fetchOpenAlex(`/authors/${authorOAId}`);
+              authorInfos.push({
+                ...authorData,
+                position: authorship.author_position,
+                institutions: authorship.institutions,
+                is_corresponding: authorship.is_corresponding
+              });
+            } catch (e) {
+              console.warn('Could not fetch author:', e);
+            }
+          }
+        }
+
+        // Step 4: Check CORE conference ranking
+        setLoadingStep('Checking conference rankings...');
+        let coreRanking = null;
+        const sourceName = workData.primary_location?.source?.display_name || '';
+        const sourceType = workData.primary_location?.source?.type || '';
+        const isConferenceType = sourceType === 'conference' || 
+                                 workData.type === 'proceedings-article' ||
+                                 workData.type === 'proceedings';
+
+        // Only try CORE matching for conference/proceedings sources
+        if (isConferenceType) {
+          coreRanking = lookupCOREConference(sourceName);
+          // Also try with the raw source name
+          if (!coreRanking) {
+            const rawName = workData.primary_location?.raw_source_name || '';
+            coreRanking = lookupCOREConference(rawName);
+          }
+          // Try extracting well-known acronyms (3+ uppercase chars)
+          if (!coreRanking && sourceName) {
+            const acronymMatch = sourceName.match(/\b([A-Z]{3,}(?:[-\/][A-Z]+)*)\b/);
+            if (acronymMatch) {
+              coreRanking = lookupCOREConference(acronymMatch[1]);
+            }
+          }
+          // Try matching from work title (e.g., "Proceedings of KDD 2019")
+          if (!coreRanking && workData.title) {
+            const titleAcronym = workData.title.match(/\b([A-Z]{3,}(?:[-\/][A-Z]+)*)(?:\s*\d{4})?\b/);
+            if (titleAcronym) {
+              coreRanking = lookupCOREConference(titleAcronym[1]);
+            }
+          }
+        }
+
+        hideLoading();
+
+        // Render results
+        renderResults(workData, sourceData, authorInfos, coreRanking, doi);
+
+        // Save to history
+        saveToHistory(doi, workData, sourceData, coreRanking);
+
+      } catch (error) {
+        hideLoading();
+        showError(error.message);
+        console.error('Lookup error:', error);
+      }
+    }
+
+    // ===================== RENDER RESULTS =====================
+    function renderResults(work, source, authors, coreRanking, doi) {
+      const resultsSection = document.getElementById('results-section');
+
+      // Paper Header
+      renderPaperHeader(work, doi);
+
+      // Metrics
+      renderMetrics(work, source, coreRanking);
+
+      // Authors
+      renderAuthors(authors);
+
+      // Quick Links
+      renderQuickLinks(work, source, doi);
+
+      resultsSection.classList.add('active');
+
+      // Scroll to results
+      resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function renderPaperHeader(work, doi) {
+      const container = document.getElementById('paper-header-content');
+      const sourceType = work.primary_location?.source?.type || 'unknown';
+      const sourceName = work.primary_location?.source?.display_name || 'Unknown';
+      const year = work.publication_year || '';
+      const oaStatus = work.open_access?.oa_status || 'closed';
+      const citedBy = work.cited_by_count || 0;
+
+      const typeBadgeClass = {
+        'journal': 'badge-journal',
+        'conference': 'badge-conference',
+        'repository': 'badge-repository',
+        'ebook platform': 'badge-journal',
+      }[sourceType] || 'badge-preprint';
+
+      const typeLabel = sourceType === 'repository' ? 'Preprint' : 
+                        sourceType === 'ebook platform' ? 'Book' : 
+                        sourceType.charAt(0).toUpperCase() + sourceType.slice(1);
+
+      const oaBadgeClass = {
+        'gold': 'oa-gold',
+        'green': 'oa-green',
+        'bronze': 'oa-bronze',
+        'hybrid': 'oa-gold',
+      }[oaStatus] || 'oa-closed';
+
+      container.innerHTML = `
+        <h1 class="paper-title-text" id="paper-title">${escapeHtml(work.title || work.display_name || 'No title')}</h1>
+        <div class="paper-meta">
+          <span class="paper-type-badge ${typeBadgeClass}">
+            ${typeLabel === 'Journal' ? '📰' : typeLabel === 'Conference' ? '🎤' : '📦'} ${typeLabel}
+          </span>
+          <span class="meta-item"><span class="meta-icon">📚</span> ${escapeHtml(sourceName)}</span>
+          ${year ? `<span class="meta-item"><span class="meta-icon">📅</span> ${year}</span>` : ''}
+          <span class="meta-item"><span class="meta-icon">📊</span> ${citedBy.toLocaleString()} citations</span>
+          <span class="oa-badge ${oaBadgeClass}">🔓 ${oaStatus.toUpperCase()}</span>
+        </div>
+        <a href="https://doi.org/${doi}" target="_blank" class="paper-doi-link">doi:${doi}</a>
+        ${work.primary_topic ? `
+          <div class="topics-list">
+            ${(work.topics || []).slice(0, 3).map(t => `
+              <span class="topic-badge">${escapeHtml(t.display_name)}</span>
+            `).join('')}
+          </div>
+        ` : ''}
+      `;
+    }
+
+    function renderMetrics(work, source, coreRanking) {
+      const grid = document.getElementById('metrics-grid');
+      let cards = '';
+
+      // Citation Percentile Card
+      const percentile = work.citation_normalized_percentile;
+      const fwci = work.fwci;
+      const citedBy = work.cited_by_count || 0;
+      cards += `
+        <div class="metric-card">
+          <div class="metric-card-header">
+            <span class="metric-card-title">Citation Impact</span>
+            <span class="metric-card-icon">📊</span>
+          </div>
+          <div class="metric-value gradient-text">${citedBy.toLocaleString()}</div>
+          <div class="metric-label">Total Citations</div>
+          ${fwci != null ? `
+            <div class="metric-detail">
+              <div class="metric-detail-row">
+                <span class="metric-detail-key">FWCI</span>
+                <span class="metric-detail-val">${fwci.toFixed(2)}</span>
+              </div>
+              ${percentile ? `
+                <div class="metric-detail-row">
+                  <span class="metric-detail-key">Percentile</span>
+                  <span class="metric-detail-val">${(percentile.value * 100).toFixed(1)}%</span>
+                </div>
+                <div class="percentile-bar">
+                  <div class="percentile-fill" style="width: ${percentile.value * 100}%"></div>
+                </div>
+                ${percentile.is_in_top_10_percent ? '<div style="color: var(--accent-emerald); font-size: 12px; margin-top: 6px; font-weight: 600;">🏆 Top 10%</div>' : ''}
+                ${percentile.is_in_top_1_percent ? '<div style="color: var(--accent-amber); font-size: 12px; margin-top: 6px; font-weight: 600;">🥇 Top 1%!</div>' : ''}
+              ` : ''}
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      // Journal/Source Metrics Card
+      if (source) {
+        const hIndex = source.summary_stats?.h_index;
+        const impactProxy = source.summary_stats?.['2yr_mean_citedness'];
+        const i10Index = source.summary_stats?.i10_index;
+        const worksCount = source.works_count;
+        const citedByCount = source.cited_by_count;
+
+        cards += `
+          <div class="metric-card">
+            <div class="metric-card-header">
+              <span class="metric-card-title">Journal / Source Metrics</span>
+              <span class="metric-card-icon">📰</span>
+            </div>
+            ${hIndex != null ? `
+              <div class="metric-value gradient-text">${hIndex.toLocaleString()}</div>
+              <div class="metric-label">h-index of ${escapeHtml(source.display_name || 'source')}</div>
+            ` : `
+              <div class="metric-value" style="color: var(--text-muted);">—</div>
+              <div class="metric-label">No h-index data</div>
+            `}
+            <div class="metric-detail">
+              ${impactProxy != null ? `
+                <div class="metric-detail-row">
+                  <span class="metric-detail-key">Impact Factor (proxy)</span>
+                  <span class="metric-detail-val" style="color: var(--accent-emerald)">${impactProxy.toFixed(3)}</span>
+                </div>
+              ` : ''}
+              ${i10Index != null ? `
+                <div class="metric-detail-row">
+                  <span class="metric-detail-key">i10-index</span>
+                  <span class="metric-detail-val">${i10Index.toLocaleString()}</span>
+                </div>
+              ` : ''}
+              ${worksCount ? `
+                <div class="metric-detail-row">
+                  <span class="metric-detail-key">Total Works</span>
+                  <span class="metric-detail-val">${worksCount.toLocaleString()}</span>
+                </div>
+              ` : ''}
+              ${citedByCount ? `
+                <div class="metric-detail-row">
+                  <span class="metric-detail-key">Total Citations</span>
+                  <span class="metric-detail-val">${citedByCount.toLocaleString()}</span>
+                </div>
+              ` : ''}
+              ${source.is_oa ? `
+                <div class="metric-detail-row">
+                  <span class="metric-detail-key">Open Access</span>
+                  <span class="metric-detail-val" style="color: var(--accent-emerald)">✅ Yes</span>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      // CORE Conference Ranking Card
+      const sourceType = work.primary_location?.source?.type || '';
+      const isConfType = sourceType === 'conference' || work.type === 'proceedings-article' || work.type === 'proceedings';
+      if (coreRanking || isConfType) {
+        const rankClass = coreRanking ? {
+          'A*': 'rank-astar', 'A': 'rank-a', 'B': 'rank-b', 'C': 'rank-c'
+        }[coreRanking.rank] || 'rank-c' : '';
+
+        cards += `
+          <div class="metric-card">
+            <div class="metric-card-header">
+              <span class="metric-card-title">CORE Conference Rank</span>
+              <span class="metric-card-icon">🏅</span>
+            </div>
+            ${coreRanking ? `
+              <div class="conference-rank-display">
+                <div class="rank-badge rank-badge-large ${rankClass}">${escapeHtml(coreRanking.rank)}</div>
+                <div class="conference-rank-info">
+                  <div class="conference-rank-title">${escapeHtml(coreRanking.acronym || '')}</div>
+                  <div class="metric-label">${escapeHtml(coreRanking.title)}</div>
+                  <div class="conference-rank-source" style="margin-top: 4px;">Source: ${escapeHtml(coreRanking.source)}</div>
+                </div>
+              </div>
+            ` : `
+              <div class="metric-value" style="color: var(--text-muted); font-size: 24px;">Not found</div>
+              <div class="metric-label">Conference not in local database</div>
+            `}
+            <div class="metric-detail">
+              <div class="metric-detail-row">
+                <a href="https://portal.core.edu.au/conf-ranks/?search=${encodeURIComponent(work.primary_location?.source?.display_name || '')}&by=all&source=all&sort=atitle&page=1" target="_blank" style="color: var(--accent-indigo-light); text-decoration: none; font-size: 13px;">
+                  🔍 Search CORE Portal →
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      grid.innerHTML = cards;
+    }
+
+    function renderAuthors(authors) {
+      const grid = document.getElementById('authors-grid');
+      const section = document.getElementById('authors-section');
+
+      if (!authors || authors.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = 'block';
+      let cards = '';
+
+      for (const author of authors) {
+        const hIndex = author.summary_stats?.h_index;
+        const i10Index = author.summary_stats?.i10_index;
+        const citedBy = author.cited_by_count || 0;
+        const worksCount = author.works_count || 0;
+        const institution = author.institutions?.[0] || 
+                           author.last_known_institutions?.[0] || 
+                           author.affiliations?.[0] || null;
+        const orcid = author.orcid;
+        const position = author.position || 'author';
+
+        const positionLabel = {
+          'first': '🥇 First Author',
+          'last': '🎓 Last Author (Senior)',
+          'middle': '👤 Co-Author',
+        }[position] || '👤 Author';
+
+        cards += `
+          <div class="author-card">
+            <div class="author-position">${positionLabel}${author.is_corresponding ? ' • ✉️ Corresponding' : ''}</div>
+            <div class="author-name">${escapeHtml(author.display_name || 'Unknown')}</div>
+            <div class="author-institution">${institution ? escapeHtml(institution.display_name || '') : 'Institution unknown'}</div>
+            <div class="author-metrics">
+              ${hIndex != null ? `
+                <div class="author-metric">
+                  <div class="author-metric-value">${hIndex}</div>
+                  <div class="author-metric-label">h-index</div>
+                </div>
+              ` : ''}
+              ${i10Index != null ? `
+                <div class="author-metric">
+                  <div class="author-metric-value">${i10Index.toLocaleString()}</div>
+                  <div class="author-metric-label">i10-index</div>
+                </div>
+              ` : ''}
+              <div class="author-metric">
+                <div class="author-metric-value">${citedBy.toLocaleString()}</div>
+                <div class="author-metric-label">Citations</div>
+              </div>
+              <div class="author-metric">
+                <div class="author-metric-value">${worksCount.toLocaleString()}</div>
+                <div class="author-metric-label">Works</div>
+              </div>
+            </div>
+            <div class="author-links">
+              ${orcid ? `<a href="${orcid}" target="_blank" class="author-link">ORCID</a>` : ''}
+              <a href="https://scholar.google.com/scholar?q=${encodeURIComponent(author.display_name || '')}" target="_blank" class="author-link">Google Scholar</a>
+              <a href="${author.id}" target="_blank" class="author-link">OpenAlex</a>
+            </div>
+          </div>
+        `;
+      }
+
+      grid.innerHTML = cards;
+    }
+
+    function renderQuickLinks(work, source, doi) {
+      const grid = document.getElementById('quick-links-grid');
+      const sourceName = work.primary_location?.source?.display_name || '';
+      const issn = source?.issn_l || work.primary_location?.source?.issn_l || '';
+
+      let links = '';
+
+      // DOI link
+      links += `<a href="https://doi.org/${doi}" target="_blank" class="quick-link">
+        <span class="link-icon">🔗</span> DOI page
+      </a>`;
+
+      // Scimago search
+      if (issn) {
+        links += `<a href="https://www.scimagojr.com/journalsearch.php?q=${issn}&tip=issn" target="_blank" class="quick-link">
+          <span class="link-icon">📊</span> Scimago (ISSN)
+        </a>`;
+      }
+      if (sourceName) {
+        links += `<a href="https://www.scimagojr.com/journalsearch.php?q=${encodeURIComponent(sourceName)}&tip=jou" target="_blank" class="quick-link">
+          <span class="link-icon">📊</span> Scimago (Name)
+        </a>`;
+      }
+
+      // CORE portal
+      links += `<a href="https://portal.core.edu.au/conf-ranks/?search=${encodeURIComponent(sourceName)}&by=all&source=all&sort=atitle&page=1" target="_blank" class="quick-link">
+        <span class="link-icon">🏅</span> CORE Portal
+      </a>`;
+
+      // Google Scholar
+      links += `<a href="https://scholar.google.com/scholar?q=${encodeURIComponent(work.title || '')}" target="_blank" class="quick-link">
+        <span class="link-icon">🎓</span> Google Scholar
+      </a>`;
+
+      // Semantic Scholar
+      links += `<a href="https://api.semanticscholar.org/graph/v1/paper/DOI:${doi}?fields=title,citationCount,influentialCitationCount" target="_blank" class="quick-link">
+        <span class="link-icon">🧠</span> Semantic Scholar API
+      </a>`;
+
+      // OpenAlex
+      if (work.id) {
+        links += `<a href="${work.id}" target="_blank" class="quick-link">
+          <span class="link-icon">📖</span> OpenAlex
+        </a>`;
+      }
+
+      // Excitation.tech
+      links += `<a href="https://excitation.tech/" target="_blank" class="quick-link">
+        <span class="link-icon">⚡</span> Excitation.tech
+      </a>`;
+
+      // PDF if available
+      const pdfUrl = work.primary_location?.pdf_url || work.best_oa_location?.pdf_url;
+      if (pdfUrl) {
+        links += `<a href="${pdfUrl}" target="_blank" class="quick-link">
+          <span class="link-icon">📄</span> PDF
+        </a>`;
+      }
+
+      grid.innerHTML = links;
+    }
+
+    // ===================== HISTORY =====================
+    function getHistory() {
+      try {
+        return JSON.parse(localStorage.getItem('scholarlens_history') || '[]');
+      } catch { return []; }
+    }
+
+    function saveToHistory(doi, work, source, coreRanking) {
+      const history = getHistory();
+      // Remove duplicate
+      const filtered = history.filter(h => h.doi !== doi);
+      
+      const entry = {
+        doi,
+        title: work.title || work.display_name || 'Unknown',
+        source: work.primary_location?.source?.display_name || '',
+        year: work.publication_year || '',
+        sourceType: work.primary_location?.source?.type || '',
+        hIndex: source?.summary_stats?.h_index || null,
+        coreRank: coreRanking?.rank || null,
+        timestamp: Date.now()
+      };
+
+      filtered.unshift(entry);
+      // Keep max 50 items
+      const trimmed = filtered.slice(0, 50);
+      localStorage.setItem('scholarlens_history', JSON.stringify(trimmed));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('history-list');
+      const history = getHistory();
+
+      if (history.length === 0) {
+        list.innerHTML = '<div class="empty-history">No lookups yet. Try a DOI above! 🔍</div>';
+        return;
+      }
+
+      let html = '';
+      for (const item of history.slice(0, 10)) {
+        const rankBg = item.coreRank ? ({
+          'A*': 'var(--gradient-astar)',
+          'A': 'var(--gradient-a)',
+          'B': 'var(--gradient-b)',
+          'C': 'var(--gradient-c)',
+        }[item.coreRank] || 'var(--gradient-c)') : 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+
+        const rankText = item.coreRank || (item.hIndex ? `h${item.hIndex}` : '—');
+        const timeAgo = getTimeAgo(item.timestamp);
+
+        html += `
+          <div class="history-item" onclick="fillDOI('${escapeHtml(item.doi)}')">
+            <div class="history-item-rank" style="background: ${rankBg}">${rankText}</div>
+            <div class="history-item-info">
+              <div class="history-item-title">${escapeHtml(item.title)}</div>
+              <div class="history-item-meta">${escapeHtml(item.source)} ${item.year ? '• ' + item.year : ''}</div>
+            </div>
+            <div class="history-item-time">${timeAgo}</div>
+          </div>
+        `;
+      }
+      list.innerHTML = html;
+    }
+
+    function clearHistory() {
+      localStorage.removeItem('scholarlens_history');
+      renderHistory();
+    }
+
+    function getTimeAgo(timestamp) {
+      const seconds = Math.floor((Date.now() - timestamp) / 1000);
+      if (seconds < 60) return 'just now';
+      if (seconds < 3600) return `${Math.floor(seconds/60)}m ago`;
+      if (seconds < 86400) return `${Math.floor(seconds/3600)}h ago`;
+      return `${Math.floor(seconds/86400)}d ago`;
+    }
+
+    // ===================== UI HELPERS =====================
+    function showLoading(text) {
+      document.getElementById('loading-overlay').classList.add('active');
+      document.getElementById('loading-step').textContent = text || '';
+    }
+
+    function setLoadingStep(text) {
+      document.getElementById('loading-step').textContent = text;
+    }
+
+    function hideLoading() {
+      document.getElementById('loading-overlay').classList.remove('active');
+    }
+
+    function showError(msg) {
+      const banner = document.getElementById('error-banner');
+      document.getElementById('error-text').textContent = msg;
+      banner.classList.add('active');
+    }
+
+    function hideError() {
+      document.getElementById('error-banner').classList.remove('active');
+    }
+
+    function hideResults() {
+      document.getElementById('results-section').classList.remove('active');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ===================== KEYBOARD SHORTCUT =====================
+    document.getElementById('doi-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleDOILookup();
+    });
+
+    // ===================== INIT =====================
+    window.addEventListener('DOMContentLoaded', () => {
+      renderHistory();
+
+      // Check URL params for DOI
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlDoi = urlParams.get('doi');
+      if (urlDoi) {
+        document.getElementById('doi-input').value = urlDoi;
+        handleDOILookup();
+      }
+    });
+  </script>
+</body>
+</html>
