@@ -10,7 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;400;500;600;700;1,9..40,400&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="core_rankings.js"></script>
-  <script src="ccf_rankings.js"></script>
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <style>
     /* ===================== DESIGN SYSTEM ===================== */
@@ -3498,7 +3497,6 @@
       // Classify references
       const journalQ = { Q1: 0, Q2: 0, Q3: 0, Q4: 0 };
       const coreRank = { 'A*': 0, 'A': 0, 'B': 0, 'C': 0 };
-      const ccfRank = { 'A': 0, 'B': 0, 'C': 0 };
       let totalJournals = 0;
       let totalConfs = 0;
       let totalOther = 0;
@@ -3518,11 +3516,6 @@
           const coreMatch = lookupCOREConference(srcName);
           if (coreMatch && coreRank.hasOwnProperty(coreMatch.rank)) {
             coreRank[coreMatch.rank]++;
-          }
-          // Try CCF lookup (safely check if script is loaded)
-          const ccfMatch = typeof lookupCCFConference === 'function' ? lookupCCFConference(srcName) : null;
-          if (ccfMatch && ccfRank.hasOwnProperty(ccfMatch.rank)) {
-            ccfRank[ccfMatch.rank]++;
           }
           
           totalConfs++;
@@ -3563,21 +3556,18 @@
       }
 
       // Render donut charts
-      renderRefCharts(journalQ, coreRank, ccfRank, totalJournals, totalConfs, totalOther, refs.length, content);
+      renderRefCharts(journalQ, coreRank, totalJournals, totalConfs, totalOther, refs.length, content);
     }
 
-    function renderRefCharts(journalQ, coreRank, ccfRank, totalJournals, totalConfs, totalOther, totalRefs, container) {
+    function renderRefCharts(journalQ, coreRank, totalJournals, totalConfs, totalOther, totalRefs, container) {
       const jColors = { Q1: '#2ecc71', Q2: '#f39c12', Q3: '#e67e22', Q4: '#e74c3c' };
       const coreColors = { 'A*': '#f39c12', 'A': '#2ecc71', 'B': '#3498db', 'C': '#7f8c8d' };
-      const ccfColors = { 'A': '#e74c3c', 'B': '#9b59b6', 'C': '#34495e' };
 
       const jTotal = Object.values(journalQ).reduce((a, b) => a + b, 0);
       const coreTotal = Object.values(coreRank).reduce((a, b) => a + b, 0);
-      const ccfTotal = Object.values(ccfRank).reduce((a, b) => a + b, 0);
 
       const jGradient = buildDonutGradient(journalQ, jColors);
       const coreGradient = buildDonutGradient(coreRank, coreColors);
-      const ccfGradient = buildDonutGradient(ccfRank, ccfColors);
 
       container.innerHTML = `
         <div class="refs-dashboard">
@@ -3611,23 +3601,6 @@
                 <span class="legend-item">
                   <span class="legend-color" style="background: ${coreColors[k]}"></span>
                   ${k}: ${v} ${coreTotal > 0 ? `(${Math.round(v/coreTotal*100)}%)` : ''}
-                </span>
-              `).join('')}
-            </div>
-          </div>
-          <div class="chart-card">
-            <div class="chart-title"><a href="https://www.ccf.org.cn/en/Bulletin/General/" target="_blank" style="text-decoration:none; color:inherit;">CCF Conference Ranks 🔗</a></div>
-            <div class="donut-chart" style="background: ${ccfGradient};">
-              <div class="donut-inner">
-                <div class="donut-total">${ccfTotal}</div>
-                <div class="donut-label">CCF Matches</div>
-              </div>
-            </div>
-            <div class="chart-legend">
-              ${Object.entries(ccfRank).map(([k, v]) => `
-                <span class="legend-item">
-                  <span class="legend-color" style="background: ${ccfColors[k]}"></span>
-                  ${k}: ${v} ${ccfTotal > 0 ? `(${Math.round(v/ccfTotal*100)}%)` : ''}
                 </span>
               `).join('')}
             </div>
