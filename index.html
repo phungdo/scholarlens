@@ -3140,29 +3140,24 @@
           ${work.id ? `<a href="${work.id}" target="_blank" class="meta-item meta-link" title="OpenAlex">📖 OpenAlex</a>` : ''}
           <a href="https://excitation.tech/" target="_blank" class="meta-item meta-link" title="Excitation.tech">⚡ Excitation</a>
         </div>
-        <div style="display:flex; align-items:center; gap:12px; margin-top:2px;">
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:2px;">
           <a href="https://doi.org/${doi}" target="_blank" class="paper-doi-link" style="margin:0;">doi:${doi}</a>
           ${year ? `<span class="meta-item" style="font-size:11px;">📅 ${year}</span>` : ''}
+          ${(() => {
+            const paperKeywords = (work.keywords || []).slice(0, 6);
+            const topicFallback = (work.topics || []).slice(0, 3);
+            const items = paperKeywords.length > 0 ? paperKeywords : topicFallback;
+            const isKeywords = paperKeywords.length > 0;
+            if (items.length === 0) return '';
+            return items.map(item => {
+              const label = isKeywords ? escapeHtml(item.display_name) : escapeHtml(item.display_name);
+              const url = isKeywords
+                ? `https://openalex.org/keywords/${encodeURIComponent(item.id?.replace('https://openalex.org/keywords/','') || item.display_name)}`
+                : `https://openalex.org/topics/${item.id?.replace('https://openalex.org/','') || ''}`;
+              return `<a href="${url}" target="_blank" class="topic-badge" style="text-decoration:none;">${label}</a>`;
+            }).join('');
+          })()}
         </div>
-        ${(() => {
-          // Prefer paper's own keywords; fall back to OpenAlex topics
-          const paperKeywords = (work.keywords || []).slice(0, 6);
-          const topicFallback = (work.topics || []).slice(0, 3);
-          const items = paperKeywords.length > 0 ? paperKeywords : topicFallback;
-          const isKeywords = paperKeywords.length > 0;
-          if (items.length === 0) return '';
-          return `
-            <div class="topics-list">
-              ${items.map(item => {
-                const label = isKeywords ? escapeHtml(item.display_name) : escapeHtml(item.display_name);
-                const url = isKeywords
-                  ? `https://openalex.org/keywords/${encodeURIComponent(item.id?.replace('https://openalex.org/keywords/','') || item.display_name)}`
-                  : `https://openalex.org/topics/${item.id?.replace('https://openalex.org/','') || ''}`;
-                return `<a href="${url}" target="_blank" class="topic-badge" style="text-decoration:none;">${label}</a>`;
-              }).join('')}
-            </div>
-          `;
-        })()}
       `;
     }
 
