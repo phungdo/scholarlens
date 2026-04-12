@@ -3439,9 +3439,22 @@
     function detectCollaborationType(work) {
       const authorships = work.authorships || [];
       const types = new Set();
+      
+      // Company name patterns to detect in raw affiliations
+      const companyPatterns = /\b(Inc\.|Corp\.|Corporation|Ltd\.|Co\.|GmbH|LLC|Labs?|Technologies|Tech|\.com)\b/i;
+      
       for (const a of authorships) {
+        // Check structured institution types
         for (const inst of (a.institutions || [])) {
           if (inst.type) types.add(inst.type.toLowerCase());
+        }
+        
+        // Fallback: scan raw affiliations when no institutions matched
+        if ((a.institutions || []).length === 0) {
+          const rawAffils = (a.raw_affiliation_strings || []).join(' ');
+          if (companyPatterns.test(rawAffils)) {
+            types.add('company');
+          }
         }
       }
 
