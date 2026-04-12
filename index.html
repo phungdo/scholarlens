@@ -1603,16 +1603,18 @@
     }
     .pdf-search-close:hover { color: var(--text-primary); }
 
-    /* Search highlights painted on TextLayer spans */
-    .search-highlight {
-      background: rgba(255, 235, 59, 0.5) !important;
-      color: transparent !important;
+    /* Search highlights on keyword substrings via <mark> tags */
+    .textLayer mark.search-highlight {
+      background: rgba(255, 235, 59, 0.85);
+      color: transparent;
       border-radius: 2px;
+      padding: 0;
     }
-    .search-highlight-active {
-      background: rgba(255, 120, 0, 0.6) !important;
-      color: transparent !important;
+    .textLayer mark.search-highlight-active {
+      background: rgba(255, 120, 0, 0.9);
+      color: transparent;
       border-radius: 2px;
+      padding: 0;
     }
 
     .pdf-placeholder {
@@ -2371,10 +2373,31 @@
       const allSpans = document.querySelectorAll('#pdf-pages-container .textLayer span');
       
       allSpans.forEach(span => {
-        if (span.textContent.toLowerCase().includes(lowerQuery)) {
-          span.classList.add('search-highlight');
-          searchMatches.push(span);
+        const text = span.textContent;
+        const lowerText = text.toLowerCase();
+        if (!lowerText.includes(lowerQuery)) return;
+        
+        // Save original text for restoration
+        if (!span.dataset.origText) span.dataset.origText = text;
+        
+        // Build HTML with <mark> wrapping only the keyword
+        let html = '';
+        let idx = 0;
+        let lower = text.toLowerCase();
+        while (true) {
+          const pos = lower.indexOf(lowerQuery, idx);
+          if (pos === -1) {
+            html += escapeHtml(text.slice(idx));
+            break;
+          }
+          html += escapeHtml(text.slice(idx, pos));
+          html += `<mark class="search-highlight">${escapeHtml(text.slice(pos, pos + query.length))}</mark>`;
+          idx = pos + query.length;
         }
+        span.innerHTML = html;
+        
+        // Collect all <mark> elements for navigation
+        span.querySelectorAll('mark.search-highlight').forEach(m => searchMatches.push(m));
       });
       
       if (searchMatches.length > 0) {
@@ -2409,8 +2432,10 @@
     }
 
     function clearSearchHighlights() {
-      document.querySelectorAll('.search-highlight, .search-highlight-active').forEach(el => {
-        el.classList.remove('search-highlight', 'search-highlight-active');
+      // Restore original text content of modified spans
+      document.querySelectorAll('#pdf-pages-container .textLayer span[data-orig-text]').forEach(span => {
+        span.textContent = span.dataset.origText;
+        delete span.dataset.origText;
       });
     }
 
