@@ -1740,9 +1740,7 @@
             <div class="pdf-viewer-toolbar">
               <span class="pdf-viewer-title" id="pdf-viewer-title">📄 PDF Viewer</span>
               <div class="pdf-viewer-controls">
-                <button class="pdf-nav-btn" id="pdf-prev" onclick="pdfPrevPage()" disabled>‹</button>
-                <span class="pdf-page-info" id="pdf-page-info">—</span>
-                <button class="pdf-nav-btn" id="pdf-next" onclick="pdfNextPage()" disabled>›</button>
+                <span class="pdf-file-info" id="pdf-file-info"></span>
                 <button class="pdf-zoom-btn" onclick="pdfZoom(-0.15)">−</button>
                 <span class="pdf-zoom-info" id="pdf-zoom-info">100%</span>
                 <button class="pdf-zoom-btn" onclick="pdfZoom(0.15)">+</button>
@@ -1758,7 +1756,7 @@
                 </label>
                 <input type="file" id="pdf-viewer-upload" accept=".pdf" onchange="handleViewerPdfUpload(event)" style="display:none;">
               </div>
-              <canvas id="pdf-canvas" style="display:none;"></canvas>
+              <div id="pdf-pages-container" style="display:none; flex-direction: column; gap: 16px; align-items: center; width: 100%;"></div>
             </div>
           </div>
         </div>
@@ -1794,47 +1792,62 @@
 
     // ===================== PDF VIEWER STATE =====================
     let pdfViewerDoc = null;
-    let pdfViewerPage = 1;
-    let pdfViewerScale = 1.0;
-    let pdfViewerArrayBuffer = null; // stored from upload
+    let pdfViewerScale = 1.0; /* Increased default visual scale or handle via CSS, start at 1.0 */
+    let pdfViewerArrayBuffer = null; 
 
-    function renderPdfPage(pageNum) {
+    // Render all pages for continuous scrolling
+    async function renderAllPdfPages() {
       if (!pdfViewerDoc) return;
-      pdfViewerDoc.getPage(pageNum).then(page => {
-        const canvas = document.getElementById('pdf-canvas');
+      const container = document.getElementById('pdf-pages-container');
+      container.innerHTML = ''; // Clear previous pages
+      
+      const pixelRatio = window.devicePixelRatio || 1;
+
+      for (let pageNum = 1; pageNum <= pdfViewerDoc.numPages; pageNum++) {
+        // Create canvas for the page
+        const canvas = document.createElement('canvas');
+        canvas.className = 'pdf-page-canvas';
+        container.appendChild(canvas);
+
+        const page = await pdfViewerDoc.getPage(pageNum);
         const ctx = canvas.getContext('2d');
         const viewport = page.getViewport({ scale: pdfViewerScale });
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
+        
+        // High-DPI canvas handling to prevent blurriness
+        canvas.width = viewport.width * pixelRatio;
+        canvas.height = viewport.height * pixelRatio;
+        canvas.style.width = viewport.width + 'px';
+        canvas.style.height = viewport.height + 'px';
+        
+        ctx.scale(pixelRatio, pixelRatio);
+        
+        // Let it render asynchronously
         page.render({ canvasContext: ctx, viewport: viewport });
-        document.getElementById('pdf-page-info').textContent = `${pageNum} / ${pdfViewerDoc.numPages}`;
-        document.getElementById('pdf-prev').disabled = pageNum <= 1;
-        document.getElementById('pdf-next').disabled = pageNum >= pdfViewerDoc.numPages;
-      });
+      }
+      
+      document.getElementById('pdf-file-info').textContent = `${pdfViewerDoc.numPages} Pages`;
     }
 
-    function pdfPrevPage() {
-      if (pdfViewerPage > 1) { pdfViewerPage--; renderPdfPage(pdfViewerPage); }
-    }
-    function pdfNextPage() {
-      if (pdfViewerDoc && pdfViewerPage < pdfViewerDoc.numPages) { pdfViewerPage++; renderPdfPage(pdfViewerPage); }
-    }
     function pdfZoom(delta) {
-      pdfViewerScale = Math.max(0.5, Math.min(3.0, pdfViewerScale + delta));
+      // Limit zoom range
+      pdfViewerScale = Math.max(0.75, Math.min(3.0, pdfViewerScale + delta));
       document.getElementById('pdf-zoom-info').textContent = Math.round(pdfViewerScale * 100) + '%';
-      if (pdfViewerDoc) renderPdfPage(pdfViewerPage);
+      if (pdfViewerDoc) renderAllPdfPages();
     }
 
     async function loadPdfIntoViewer(data, name) {
       try {
         pdfViewerDoc = await pdfjsLib.getDocument({ data: data }).promise;
-        pdfViewerPage = 1;
-        pdfViewerScale = 1.0;
+        pdfViewerScale = 1.25; // Slightly larger default for readability
         document.getElementById('pdf-placeholder').style.display = 'none';
-        document.getElementById('pdf-canvas').style.display = 'block';
+        
+        const container = document.getElementById('pdf-pages-container');
+        container.style.display = 'flex';
+        
         document.getElementById('pdf-viewer-title').textContent = '📄 ' + (name || 'PDF');
-        document.getElementById('pdf-zoom-info').textContent = '100%';
-        renderPdfPage(1);
+        document.getElementById('pdf-zoom-info').textContent = Math.round(pdfViewerScale * 100) + '%';
+        
+        renderAllPdfPages();
       } catch (e) {
         console.error('PDF viewer error:', e);
       }
@@ -2160,12 +2173,15 @@
       // Reset PDF viewer
       pdfViewerDoc = null;
       pdfViewerArrayBuffer = null;
-      pdfViewerPage = 1;
       pdfViewerScale = 1.0;
-      document.getElementById('pdf-placeholder').style.display = '';
-      document.getElementById('pdf-canvas').style.display = 'none';
+      document.getElementById('pdf-placeholder').style.display = 'flex';
+      
+      const container = document.getElementById('pdf-pages-container');
+      container.innerHTML = '';
+      container.style.display = 'none';
+      
       document.getElementById('pdf-viewer-title').textContent = '📄 PDF Viewer';
-      document.getElementById('pdf-page-info').textContent = '—';
+      document.getElementById('pdf-file-info').textContent = '';
       document.getElementById('pdf-zoom-info').textContent = '100%';
       window.scrollTo(0, 0);
     }
