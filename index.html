@@ -1272,12 +1272,11 @@
       border-color: var(--accent-indigo);
     }
 
-    /* Dashboard 3-column grid */
+    /* Dashboard 2-column split: Metrics | PDF */
     .dashboard-grid {
       display: grid;
-      grid-template-columns: 320px 1fr 360px;
-      gap: 12px;
-      padding: 12px;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
       flex: 1;
       min-height: 0;
       overflow: hidden;
@@ -1293,6 +1292,122 @@
     .dash-col::-webkit-scrollbar { width: 4px; }
     .dash-col::-webkit-scrollbar-track { background: transparent; }
     .dash-col::-webkit-scrollbar-thumb { background: rgba(191,90,30,0.2); border-radius: 2px; }
+
+    .dash-col-metrics {
+      padding: 16px 20px;
+      border-right: 1px solid var(--border-subtle);
+    }
+
+    .dash-col-pdf {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ===================== PDF VIEWER ===================== */
+    .pdf-viewer-panel {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: var(--bg-secondary);
+    }
+    .pdf-viewer-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+    .pdf-viewer-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .pdf-viewer-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pdf-nav-btn, .pdf-zoom-btn {
+      width: 28px; height: 28px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+    .pdf-nav-btn:hover:not(:disabled), .pdf-zoom-btn:hover {
+      background: var(--bg-secondary);
+      border-color: var(--accent-indigo);
+    }
+    .pdf-nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    .pdf-page-info, .pdf-zoom-info {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      min-width: 40px;
+      text-align: center;
+    }
+    .pdf-canvas-wrap {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 16px;
+    }
+    .pdf-canvas-wrap canvas {
+      max-width: 100%;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      border-radius: 4px;
+    }
+    .pdf-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+      color: var(--text-muted);
+      text-align: center;
+      gap: 12px;
+    }
+    .pdf-placeholder-icon { font-size: 48px; opacity: 0.4; }
+    .pdf-placeholder-title {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 18px;
+      color: var(--text-secondary);
+    }
+    .pdf-placeholder-text {
+      font-size: 13px;
+      max-width: 280px;
+      line-height: 1.5;
+    }
+    .pdf-upload-btn {
+      margin-top: 8px;
+      padding: 8px 20px;
+      background: var(--gradient-hero);
+      color: white;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+    .pdf-upload-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(191,90,30,0.2);
+    }
 
     /* Dashboard-mode compact overrides */
     body.dashboard-mode .paper-header-card {
@@ -1433,21 +1548,21 @@
     }
 
     body.dashboard-mode .refs-dashboard {
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
     body.dashboard-mode .chart-card {
       padding: 14px;
     }
     body.dashboard-mode .donut-chart {
-      width: 120px; height: 120px;
-      margin-bottom: 12px;
+      width: 110px; height: 110px;
+      margin-bottom: 10px;
     }
     body.dashboard-mode .donut-inner {
-      top: 18px; left: 18px; right: 18px; bottom: 18px;
+      top: 16px; left: 16px; right: 16px; bottom: 16px;
     }
     body.dashboard-mode .donut-total {
-      font-size: 20px;
+      font-size: 18px;
     }
     body.dashboard-mode .chart-legend {
       gap: 6px;
@@ -1463,29 +1578,30 @@
     .dash-topbar { display: none; }
     body.dashboard-mode .dash-topbar { display: flex; }
 
-    /* Mobile fallback: stack columns */
-    @media (max-width: 1200px) {
-      .dashboard-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-      .dash-col-right {
-        grid-column: 1 / -1;
-      }
-      body.dashboard-mode .refs-dashboard {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-    @media (max-width: 768px) {
+    /* Mobile: stack to single column, PDF below */
+    @media (max-width: 1024px) {
       .dashboard-grid {
         grid-template-columns: 1fr;
+      }
+      .dash-col-metrics {
+        border-right: none;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .dash-col-pdf {
+        min-height: 500px;
       }
       body.dashboard-mode {
         overflow: auto;
       }
+    }
+    @media (max-width: 768px) {
       body.dashboard-mode .metrics-grid {
         grid-template-columns: 1fr;
       }
       body.dashboard-mode .authors-grid {
+        grid-template-columns: 1fr;
+      }
+      body.dashboard-mode .refs-dashboard {
         grid-template-columns: 1fr;
       }
     }
@@ -1581,38 +1697,69 @@
         <button class="dash-back-btn" onclick="backToSearch()">← New Search</button>
       </div>
 
-      <!-- Dashboard Grid -->
+      <!-- Dashboard 2-Column Split -->
       <div class="dashboard-grid" id="dashboard-grid">
-        <!-- LEFT COLUMN: Paper Info + Funding -->
-        <div class="dash-col dash-col-left">
+        <!-- LEFT: All Metrics (scrollable) -->
+        <div class="dash-col dash-col-metrics">
+          <!-- Paper Header -->
           <div class="paper-header-card" id="paper-header-card">
             <div id="paper-header-content"></div>
           </div>
+
+          <!-- Metrics 2x2 -->
+          <div class="metrics-grid" id="metrics-grid"></div>
+
+          <!-- Funding -->
           <div class="v2-section" id="funding-section" style="display: none;">
             <div class="section-title">💰 Funding & Grants</div>
             <div id="funding-content"></div>
           </div>
-          <!-- Quick Links (compact) -->
+
+          <!-- Reference Portfolio Analysis -->
+          <div class="v2-section" id="refs-section" style="display: none;">
+            <div class="section-title">📚 Reference Portfolio</div>
+            <div id="refs-content"></div>
+          </div>
+
+          <!-- Authors -->
+          <div class="authors-section" id="authors-section">
+            <div class="section-title">👤 Key Authors</div>
+            <div class="authors-grid" id="authors-grid"></div>
+          </div>
+
+          <!-- Quick Links -->
           <div class="quick-links-section" id="quick-links-section">
             <div class="section-title">🔗 External Resources</div>
             <div class="quick-links-grid" id="quick-links-grid"></div>
           </div>
         </div>
 
-        <!-- CENTER COLUMN: Metrics + Authors -->
-        <div class="dash-col dash-col-center">
-          <div class="metrics-grid" id="metrics-grid"></div>
-          <div class="authors-section" id="authors-section">
-            <div class="section-title">👤 Key Authors</div>
-            <div class="authors-grid" id="authors-grid"></div>
-          </div>
-        </div>
-
-        <!-- RIGHT COLUMN: Reference Portfolio Analysis -->
-        <div class="dash-col dash-col-right">
-          <div class="v2-section" id="refs-section" style="display: none;">
-            <div class="section-title">📚 Reference Portfolio</div>
-            <div id="refs-content"></div>
+        <!-- RIGHT: PDF Reader -->
+        <div class="dash-col dash-col-pdf">
+          <div class="pdf-viewer-panel" id="pdf-viewer-panel">
+            <div class="pdf-viewer-toolbar">
+              <span class="pdf-viewer-title" id="pdf-viewer-title">📄 PDF Viewer</span>
+              <div class="pdf-viewer-controls">
+                <button class="pdf-nav-btn" id="pdf-prev" onclick="pdfPrevPage()" disabled>‹</button>
+                <span class="pdf-page-info" id="pdf-page-info">—</span>
+                <button class="pdf-nav-btn" id="pdf-next" onclick="pdfNextPage()" disabled>›</button>
+                <button class="pdf-zoom-btn" onclick="pdfZoom(-0.15)">−</button>
+                <span class="pdf-zoom-info" id="pdf-zoom-info">100%</span>
+                <button class="pdf-zoom-btn" onclick="pdfZoom(0.15)">+</button>
+              </div>
+            </div>
+            <div class="pdf-canvas-wrap" id="pdf-canvas-wrap">
+              <div class="pdf-placeholder" id="pdf-placeholder">
+                <div class="pdf-placeholder-icon">📄</div>
+                <div class="pdf-placeholder-title">No PDF Loaded</div>
+                <div class="pdf-placeholder-text">Upload a PDF to view it here, or use DOI lookup for Open Access papers.</div>
+                <label class="pdf-upload-btn" for="pdf-viewer-upload">
+                  📎 Upload PDF
+                </label>
+                <input type="file" id="pdf-viewer-upload" accept=".pdf" onchange="handleViewerPdfUpload(event)" style="display:none;">
+              </div>
+              <canvas id="pdf-canvas" style="display:none;"></canvas>
+            </div>
           </div>
         </div>
       </div>
@@ -1643,6 +1790,75 @@
     // PDF.js worker
     if (typeof pdfjsLib !== 'undefined') {
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    // ===================== PDF VIEWER STATE =====================
+    let pdfViewerDoc = null;
+    let pdfViewerPage = 1;
+    let pdfViewerScale = 1.0;
+    let pdfViewerArrayBuffer = null; // stored from upload
+
+    function renderPdfPage(pageNum) {
+      if (!pdfViewerDoc) return;
+      pdfViewerDoc.getPage(pageNum).then(page => {
+        const canvas = document.getElementById('pdf-canvas');
+        const ctx = canvas.getContext('2d');
+        const viewport = page.getViewport({ scale: pdfViewerScale });
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        page.render({ canvasContext: ctx, viewport: viewport });
+        document.getElementById('pdf-page-info').textContent = `${pageNum} / ${pdfViewerDoc.numPages}`;
+        document.getElementById('pdf-prev').disabled = pageNum <= 1;
+        document.getElementById('pdf-next').disabled = pageNum >= pdfViewerDoc.numPages;
+      });
+    }
+
+    function pdfPrevPage() {
+      if (pdfViewerPage > 1) { pdfViewerPage--; renderPdfPage(pdfViewerPage); }
+    }
+    function pdfNextPage() {
+      if (pdfViewerDoc && pdfViewerPage < pdfViewerDoc.numPages) { pdfViewerPage++; renderPdfPage(pdfViewerPage); }
+    }
+    function pdfZoom(delta) {
+      pdfViewerScale = Math.max(0.5, Math.min(3.0, pdfViewerScale + delta));
+      document.getElementById('pdf-zoom-info').textContent = Math.round(pdfViewerScale * 100) + '%';
+      if (pdfViewerDoc) renderPdfPage(pdfViewerPage);
+    }
+
+    async function loadPdfIntoViewer(data, name) {
+      try {
+        pdfViewerDoc = await pdfjsLib.getDocument({ data: data }).promise;
+        pdfViewerPage = 1;
+        pdfViewerScale = 1.0;
+        document.getElementById('pdf-placeholder').style.display = 'none';
+        document.getElementById('pdf-canvas').style.display = 'block';
+        document.getElementById('pdf-viewer-title').textContent = '📄 ' + (name || 'PDF');
+        document.getElementById('pdf-zoom-info').textContent = '100%';
+        renderPdfPage(1);
+      } catch (e) {
+        console.error('PDF viewer error:', e);
+      }
+    }
+
+    function handleViewerPdfUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      file.arrayBuffer().then(buf => {
+        pdfViewerArrayBuffer = buf.slice(0);
+        loadPdfIntoViewer(buf, file.name);
+      });
+    }
+
+    async function loadPdfFromUrl(url) {
+      try {
+        document.getElementById('pdf-viewer-title').textContent = '📄 Loading...';
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error('Failed');
+        const buf = await resp.arrayBuffer();
+        loadPdfIntoViewer(buf, 'Open Access PDF');
+      } catch (e) {
+        console.log('Could not load OA PDF:', e.message);
+      }
     }
 
     // ===================== TAB SWITCHING =====================
@@ -1713,6 +1929,9 @@
 
       try {
         const arrayBuffer = await file.arrayBuffer();
+        // Store copy for the viewer
+        pdfViewerArrayBuffer = arrayBuffer.slice(0);
+
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         let fullText = '';
 
@@ -1735,6 +1954,8 @@
           document.getElementById('doi-input').value = doi;
           switchTab('doi-tab');
           await performLookup(doi);
+          // Load the uploaded PDF into the viewer
+          loadPdfIntoViewer(pdfViewerArrayBuffer.slice(0), file.name);
         } else {
           hideLoading();
           showError('Could not find a DOI in this PDF. Try pasting the DOI manually.');
@@ -1921,11 +2142,31 @@
 
       resultsSection.classList.add('active');
       window.scrollTo(0, 0);
+
+      // PDF Viewer: try to load OA PDF if no uploaded PDF
+      if (!pdfViewerDoc) {
+        const oaPdfUrl = work.open_access?.oa_url || 
+                         work.primary_location?.pdf_url ||
+                         work.best_oa_location?.pdf_url;
+        if (oaPdfUrl) {
+          loadPdfFromUrl(oaPdfUrl);
+        }
+      }
     }
 
     function backToSearch() {
       document.body.classList.remove('dashboard-mode');
       document.getElementById('results-section').classList.remove('active');
+      // Reset PDF viewer
+      pdfViewerDoc = null;
+      pdfViewerArrayBuffer = null;
+      pdfViewerPage = 1;
+      pdfViewerScale = 1.0;
+      document.getElementById('pdf-placeholder').style.display = '';
+      document.getElementById('pdf-canvas').style.display = 'none';
+      document.getElementById('pdf-viewer-title').textContent = '📄 PDF Viewer';
+      document.getElementById('pdf-page-info').textContent = '—';
+      document.getElementById('pdf-zoom-info').textContent = '100%';
       window.scrollTo(0, 0);
     }
 
