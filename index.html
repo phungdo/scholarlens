@@ -1103,9 +1103,38 @@
       font-weight: 800; font-size: 15px; color: white;
       flex-shrink: 0;
     }
-    .funder-info { flex: 1; }
-    .funder-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
-    .funder-grant { font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+    .funder-info { flex: 1; min-width: 0; }
+    .funder-name { font-weight: 500; color: var(--text-primary); font-size: 14px; margin-bottom: 4px; }
+    .funder-grant { 
+      color: var(--text-muted); 
+      font-size: 13px; 
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    
+    /* New: Interactive Grant Code hyperlinks */
+    .funder-grant-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      background: rgba(191,90,30,0.06);
+      border: 1px solid rgba(191,90,30,0.2);
+      border-radius: var(--radius-sm);
+      color: var(--accent-indigo);
+      text-decoration: none;
+      font-family: 'JetBrains Mono', monospace; /* code-like font */
+      font-size: 11px;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+    .funder-grant-link:hover {
+      background: rgba(191,90,30,0.12);
+      border-color: var(--accent-indigo);
+      transform: translateY(-1px);
+    }
     .funding-empty { color: var(--text-muted); font-size: 13px; padding: 12px 0; }
 
     /* ===================== V2: REFERENCE ANALYSIS ===================== */
@@ -2667,9 +2696,16 @@
       let html = '<div class="funding-list">';
       for (const [, funder] of funderMap) {
         const initial = (funder.name || '?').charAt(0).toUpperCase();
-        const grantText = funder.grants.length > 0
-          ? `Grant: ${funder.grants.join(', ')}`
-          : '';
+        
+        let grantHtml = '';
+        if (funder.grants.length > 0) {
+          const grantLinks = funder.grants.map(grant => {
+            const encodedGrant = encodeURIComponent(grant);
+            return `<a href="https://www.google.com/search?q=${encodedGrant}" target="_blank" class="funder-grant-link" title="Search Google for this grant code">🔍 ${escapeHtml(grant)}</a>`;
+          }).join('');
+          grantHtml = `<div class="funder-grant"><strong>Grants:</strong> ${grantLinks}</div>`;
+        }
+
         const rorLink = funder.ror
           ? `<a href="${funder.ror}" target="_blank" style="color: var(--accent-indigo-light); font-size: 12px; text-decoration: none; margin-left: 8px;">🔗 ROR</a>`
           : '';
@@ -2679,7 +2715,7 @@
             <div class="funder-icon">${initial}</div>
             <div class="funder-info">
               <div class="funder-name">${escapeHtml(funder.name)}${rorLink}</div>
-              ${grantText ? `<div class="funder-grant">${escapeHtml(grantText)}</div>` : ''}
+              ${grantHtml}
             </div>
           </div>
         `;
