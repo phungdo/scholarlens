@@ -2043,18 +2043,6 @@
             <div id="paper-header-content"></div>
           </div>
 
-          <!-- Quick Links (moved to top for easy access) -->
-          <div class="quick-links-section" id="quick-links-section">
-            <div class="section-title">🔗 External Resources</div>
-            <div class="quick-links-grid" id="quick-links-grid"></div>
-          </div>
-
-          <!-- Publication Timeline -->
-          <div class="pub-timeline-section v2-section" id="pub-timeline-section">
-            <div class="section-title">📅 Publication Timeline</div>
-            <div id="pub-timeline-content"></div>
-          </div>
-
           <!-- Metrics 2x2 -->
           <div class="metrics-grid" id="metrics-grid"></div>
 
@@ -3061,11 +3049,8 @@
       // Authors
       renderAuthors(authors);
 
-      // Quick Links
+      // Quick Links (rendered inside paper header)
       renderQuickLinks(work, source, doi);
-
-      // Publication Timeline (async via CrossRef)
-      fetchPublicationTimeline(doi);
 
       resultsSection.classList.add('active');
       window.scrollTo(0, 0);
@@ -3162,6 +3147,13 @@
           `;
         })()}
       `;
+
+      // Embed quick links grid directly inside paper header
+      const qlDiv = document.createElement('div');
+      qlDiv.id = 'quick-links-grid';
+      qlDiv.className = 'quick-links-grid';
+      qlDiv.style.marginTop = '6px';
+      container.appendChild(qlDiv);
     }
 
     function renderMetrics(work, source, coreRanking) {
