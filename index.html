@@ -1186,6 +1186,307 @@
       color: var(--text-secondary);
       font-family: 'JetBrains Mono', monospace;
     }
+
+    /* ===================== DASHBOARD MODE ===================== */
+    /* When results are active, body enters dashboard mode */
+    body.dashboard-mode {
+      overflow: hidden;
+    }
+
+    body.dashboard-mode .header,
+    body.dashboard-mode .input-section,
+    body.dashboard-mode .loading-overlay,
+    body.dashboard-mode .error-banner,
+    body.dashboard-mode .history-section,
+    body.dashboard-mode .footer {
+      display: none !important;
+    }
+
+    body.dashboard-mode .app-container {
+      max-width: 100%;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body.dashboard-mode #results-section {
+      display: flex !important;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* Dashboard top bar */
+    .dash-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 20px;
+      background: rgba(17, 24, 39, 0.95);
+      border-bottom: 1px solid var(--border-subtle);
+      backdrop-filter: blur(20px);
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    .dash-topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+    }
+    .dash-logo {
+      font-size: 16px;
+      font-weight: 800;
+      background: var(--gradient-hero);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      flex-shrink: 0;
+    }
+    .dash-paper-title {
+      font-size: 13px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 600px;
+    }
+    .dash-back-btn {
+      padding: 6px 16px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: var(--radius-sm);
+      color: var(--accent-indigo-light);
+      font-size: 12px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+    .dash-back-btn:hover {
+      background: rgba(99, 102, 241, 0.25);
+      border-color: var(--accent-indigo);
+    }
+
+    /* Dashboard 3-column grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr 360px;
+      gap: 12px;
+      padding: 12px;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .dash-col {
+      overflow-y: auto;
+      overflow-x: hidden;
+      min-height: 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(99,102,241,0.3) transparent;
+    }
+    .dash-col::-webkit-scrollbar { width: 4px; }
+    .dash-col::-webkit-scrollbar-track { background: transparent; }
+    .dash-col::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 2px; }
+
+    /* Dashboard-mode compact overrides */
+    body.dashboard-mode .paper-header-card {
+      padding: 16px;
+      margin-bottom: 10px;
+      border-radius: var(--radius-lg);
+    }
+    body.dashboard-mode .paper-title-text {
+      font-size: 15px !important;
+      line-height: 1.3;
+    }
+    body.dashboard-mode .paper-meta {
+      gap: 6px;
+    }
+    body.dashboard-mode .paper-meta > span {
+      font-size: 10px;
+    }
+    body.dashboard-mode .paper-doi-link {
+      font-size: 11px;
+    }
+    body.dashboard-mode .topics-list {
+      margin-top: 6px;
+    }
+    body.dashboard-mode .topic-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+    }
+
+    body.dashboard-mode .metrics-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    body.dashboard-mode .metric-card {
+      padding: 14px;
+      border-radius: var(--radius-md);
+    }
+    body.dashboard-mode .metric-card-header {
+      margin-bottom: 8px;
+    }
+    body.dashboard-mode .metric-card-title {
+      font-size: 10px;
+    }
+    body.dashboard-mode .metric-card-icon {
+      font-size: 16px;
+    }
+    body.dashboard-mode .metric-value {
+      font-size: 26px;
+    }
+    body.dashboard-mode .metric-label {
+      font-size: 11px;
+    }
+    body.dashboard-mode .metric-detail {
+      margin-top: 8px;
+      padding-top: 8px;
+    }
+    body.dashboard-mode .metric-detail-row {
+      font-size: 11px;
+    }
+
+    body.dashboard-mode .quartile-badge {
+      min-width: 38px;
+      height: 38px;
+      font-size: 16px;
+    }
+    body.dashboard-mode .quartile-name {
+      font-size: 12px;
+    }
+    body.dashboard-mode .quartile-label {
+      font-size: 10px;
+    }
+
+    body.dashboard-mode .rank-badge-large {
+      padding: 6px 14px;
+      font-size: 22px;
+    }
+    body.dashboard-mode .conference-rank-title {
+      font-size: 13px;
+    }
+
+    body.dashboard-mode .v2-section {
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      border-radius: var(--radius-lg);
+    }
+    body.dashboard-mode .section-title {
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    body.dashboard-mode .funding-item {
+      padding: 8px 10px;
+    }
+    body.dashboard-mode .funder-icon {
+      width: 28px; height: 28px;
+      font-size: 12px;
+    }
+    body.dashboard-mode .funder-name {
+      font-size: 12px;
+    }
+
+    body.dashboard-mode .authors-section {
+      margin-bottom: 10px;
+    }
+    body.dashboard-mode .authors-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    body.dashboard-mode .author-card {
+      padding: 12px;
+      border-radius: var(--radius-md);
+    }
+    body.dashboard-mode .author-name {
+      font-size: 13px;
+    }
+    body.dashboard-mode .author-institution {
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+    body.dashboard-mode .author-metric-value {
+      font-size: 18px;
+    }
+    body.dashboard-mode .author-metric-label {
+      font-size: 9px;
+    }
+
+    body.dashboard-mode .quick-links-section {
+      padding: 14px 16px;
+      border-radius: var(--radius-lg);
+      margin-bottom: 10px;
+    }
+    body.dashboard-mode .quick-links-grid {
+      gap: 6px;
+    }
+    body.dashboard-mode .quick-link {
+      padding: 6px 10px;
+      font-size: 11px;
+      border-radius: var(--radius-sm);
+    }
+
+    body.dashboard-mode .refs-dashboard {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    body.dashboard-mode .chart-card {
+      padding: 14px;
+    }
+    body.dashboard-mode .donut-chart {
+      width: 120px; height: 120px;
+      margin-bottom: 12px;
+    }
+    body.dashboard-mode .donut-inner {
+      top: 18px; left: 18px; right: 18px; bottom: 18px;
+    }
+    body.dashboard-mode .donut-total {
+      font-size: 20px;
+    }
+    body.dashboard-mode .chart-legend {
+      gap: 6px;
+      font-size: 10px;
+    }
+    body.dashboard-mode .refs-summary-table th,
+    body.dashboard-mode .refs-summary-table td {
+      padding: 4px 6px;
+      font-size: 10px;
+    }
+
+    /* Hide dashboard elements when not in dashboard mode */
+    .dash-topbar { display: none; }
+    body.dashboard-mode .dash-topbar { display: flex; }
+
+    /* Mobile fallback: stack columns */
+    @media (max-width: 1200px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .dash-col-right {
+        grid-column: 1 / -1;
+      }
+      body.dashboard-mode .refs-dashboard {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    @media (max-width: 768px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      body.dashboard-mode {
+        overflow: auto;
+      }
+      body.dashboard-mode .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+      body.dashboard-mode .authors-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1267,38 +1568,51 @@
       <div class="loading-step" id="loading-step">Querying OpenAlex API...</div>
     </div>
 
-    <!-- Results -->
+    <!-- Results (Dashboard Layout) -->
     <section id="results-section">
-      <!-- Paper Header -->
-      <div class="paper-header-card" id="paper-header-card">
-        <div id="paper-header-content"></div>
+      <!-- Mini header bar for returning to search -->
+      <div class="dash-topbar" id="dash-topbar">
+        <div class="dash-topbar-left">
+          <span class="dash-logo">🔬 ScholarLens</span>
+          <span class="dash-paper-title" id="dash-paper-title"></span>
+        </div>
+        <button class="dash-back-btn" onclick="backToSearch()">← New Search</button>
       </div>
 
-      <!-- Metrics Grid -->
-      <div class="metrics-grid" id="metrics-grid"></div>
+      <!-- Dashboard Grid -->
+      <div class="dashboard-grid" id="dashboard-grid">
+        <!-- LEFT COLUMN: Paper Info + Funding -->
+        <div class="dash-col dash-col-left">
+          <div class="paper-header-card" id="paper-header-card">
+            <div id="paper-header-content"></div>
+          </div>
+          <div class="v2-section" id="funding-section" style="display: none;">
+            <div class="section-title">💰 Funding & Grants</div>
+            <div id="funding-content"></div>
+          </div>
+          <!-- Quick Links (compact) -->
+          <div class="quick-links-section" id="quick-links-section">
+            <div class="section-title">🔗 External Resources</div>
+            <div class="quick-links-grid" id="quick-links-grid"></div>
+          </div>
+        </div>
 
-      <!-- V2: Funding Info -->
-      <div class="v2-section" id="funding-section" style="display: none;">
-        <div class="section-title">💰 Funding & Grants</div>
-        <div id="funding-content"></div>
-      </div>
+        <!-- CENTER COLUMN: Metrics + Authors -->
+        <div class="dash-col dash-col-center">
+          <div class="metrics-grid" id="metrics-grid"></div>
+          <div class="authors-section" id="authors-section">
+            <div class="section-title">👤 Key Authors</div>
+            <div class="authors-grid" id="authors-grid"></div>
+          </div>
+        </div>
 
-      <!-- V2: Reference Portfolio Analysis -->
-      <div class="v2-section" id="refs-section" style="display: none;">
-        <div class="section-title">📚 Reference Portfolio Analysis</div>
-        <div id="refs-content"></div>
-      </div>
-
-      <!-- Authors -->
-      <div class="authors-section" id="authors-section">
-        <div class="section-title">👤 Author Profiles</div>
-        <div class="authors-grid" id="authors-grid"></div>
-      </div>
-
-      <!-- Quick Links -->
-      <div class="quick-links-section" id="quick-links-section">
-        <div class="section-title">🔗 External Resources</div>
-        <div class="quick-links-grid" id="quick-links-grid"></div>
+        <!-- RIGHT COLUMN: Reference Portfolio Analysis -->
+        <div class="dash-col dash-col-right">
+          <div class="v2-section" id="refs-section" style="display: none;">
+            <div class="section-title">📚 Reference Portfolio</div>
+            <div id="refs-content"></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1579,6 +1893,12 @@
     function renderResults(work, source, authors, coreRanking, doi) {
       const resultsSection = document.getElementById('results-section');
 
+      // Enter dashboard mode
+      document.body.classList.add('dashboard-mode');
+      document.getElementById('dash-paper-title').textContent = 
+        (work.title || work.display_name || '').substring(0, 80) + 
+        ((work.title || '').length > 80 ? '...' : '');
+
       // Paper Header (with V2 collaboration badge)
       renderPaperHeader(work, doi);
 
@@ -1598,9 +1918,13 @@
       renderQuickLinks(work, source, doi);
 
       resultsSection.classList.add('active');
+      window.scrollTo(0, 0);
+    }
 
-      // Scroll to results
-      resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    function backToSearch() {
+      document.body.classList.remove('dashboard-mode');
+      document.getElementById('results-section').classList.remove('active');
+      window.scrollTo(0, 0);
     }
 
     function renderPaperHeader(work, doi) {
@@ -2312,6 +2636,7 @@
     }
 
     function hideResults() {
+      document.body.classList.remove('dashboard-mode');
       document.getElementById('results-section').classList.remove('active');
     }
 
