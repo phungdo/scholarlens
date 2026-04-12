@@ -1502,12 +1502,14 @@
     .selection-action-bar {
       position: fixed;
       display: flex;
+      flex-direction: column;
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-sm);
       box-shadow: var(--shadow-md);
       z-index: 1001;
       overflow: hidden;
+      min-width: 130px;
     }
     .selection-action-bar button {
       padding: 7px 14px;
@@ -1526,7 +1528,7 @@
       color: var(--accent-indigo);
     }
     .selection-action-bar button + button {
-      border-left: 1px solid var(--border-subtle);
+      border-top: 1px solid var(--border-subtle);
     }
 
     /* Copy toast */
@@ -2258,8 +2260,10 @@
           cssRect: { left: relX, top: relY, width: rect.width, height: rect.height }
         };
 
-        // Show 3-button context menu instead of jumping to annotation popup
-        showSelectionActionBar(e.pageX, e.pageY, text, annotationData, pageContainer);
+        // Show 3-button context menu below the selection end
+        const selBottom = rect.bottom + window.scrollY;
+        const selRight = rect.right;
+        showSelectionActionBar(selRight, selBottom, text, annotationData, pageContainer);
       });
       
       // Auto-close popup/action bar if clicking outside
@@ -2278,7 +2282,7 @@
       const bar = document.createElement('div');
       bar.className = 'selection-action-bar';
       bar.style.left = x + 'px';
-      bar.style.top = (y - 40) + 'px'; // appear above the selection
+      bar.style.top = (y + 4) + 'px'; // appear just below the selection end
       
       // Copy button
       const btnCopy = document.createElement('button');
