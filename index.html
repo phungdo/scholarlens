@@ -1658,168 +1658,199 @@
       box-shadow: 0 4px 12px rgba(191,90,30,0.2);
     }
 
-    /* Dashboard-mode compact overrides */
+    /* Dashboard-mode compact overrides — ultra-compact left panel */
     body.dashboard-mode .paper-header-card {
-      padding: 16px;
-      margin-bottom: 10px;
-      border-radius: var(--radius-lg);
+      padding: 10px 14px;
+      margin-bottom: 6px;
+      border-radius: var(--radius-md);
     }
     body.dashboard-mode .paper-title-text {
-      font-size: 15px !important;
-      line-height: 1.3;
+      font-size: 14px !important;
+      line-height: 1.25;
+      margin-bottom: 4px;
     }
     body.dashboard-mode .paper-meta {
-      gap: 6px;
+      gap: 4px;
     }
     body.dashboard-mode .paper-meta > span {
       font-size: 10px;
+      padding: 1px 5px;
     }
     body.dashboard-mode .paper-doi-link {
-      font-size: 11px;
+      font-size: 10px;
+      margin-top: 2px;
     }
     body.dashboard-mode .topics-list {
-      margin-top: 6px;
+      margin-top: 4px;
+      gap: 3px;
     }
     body.dashboard-mode .topic-badge {
-      font-size: 10px;
-      padding: 2px 6px;
+      font-size: 9px;
+      padding: 1px 5px;
     }
 
     body.dashboard-mode .metrics-grid {
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 10px;
+      gap: 6px;
+      margin-bottom: 6px;
     }
     body.dashboard-mode .metric-card {
-      padding: 14px;
-      border-radius: var(--radius-md);
+      padding: 10px;
+      border-radius: var(--radius-sm);
     }
     body.dashboard-mode .metric-card-header {
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
     body.dashboard-mode .metric-card-title {
-      font-size: 10px;
+      font-size: 9px;
     }
     body.dashboard-mode .metric-card-icon {
-      font-size: 16px;
+      font-size: 14px;
     }
     body.dashboard-mode .metric-value {
-      font-size: 26px;
+      font-size: 22px;
+      line-height: 1.1;
     }
     body.dashboard-mode .metric-label {
-      font-size: 11px;
+      font-size: 10px;
+      margin-top: 1px;
     }
     body.dashboard-mode .metric-detail {
-      margin-top: 8px;
-      padding-top: 8px;
+      margin-top: 4px;
+      padding-top: 4px;
     }
     body.dashboard-mode .metric-detail-row {
-      font-size: 11px;
+      font-size: 10px;
+      padding: 1px 0;
     }
 
     body.dashboard-mode .quartile-badge {
-      min-width: 38px;
-      height: 38px;
-      font-size: 16px;
+      min-width: 32px;
+      height: 32px;
+      font-size: 14px;
     }
     body.dashboard-mode .quartile-name {
-      font-size: 12px;
+      font-size: 11px;
     }
     body.dashboard-mode .quartile-label {
-      font-size: 10px;
-    }
-
-    body.dashboard-mode .rank-badge-large {
-      padding: 6px 14px;
-      font-size: 22px;
-    }
-    body.dashboard-mode .conference-rank-title {
-      font-size: 13px;
-    }
-
-    body.dashboard-mode .v2-section {
-      padding: 14px 16px;
-      margin-bottom: 10px;
-      border-radius: var(--radius-lg);
-    }
-    body.dashboard-mode .section-title {
-      font-size: 13px;
-      margin-bottom: 10px;
-    }
-    body.dashboard-mode .funding-item {
-      padding: 8px 10px;
-    }
-    body.dashboard-mode .funder-icon {
-      width: 28px; height: 28px;
-      font-size: 12px;
-    }
-    body.dashboard-mode .funder-name {
-      font-size: 12px;
-    }
-
-    body.dashboard-mode .authors-section {
-      margin-bottom: 10px;
-    }
-    body.dashboard-mode .authors-grid {
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    body.dashboard-mode .author-card {
-      padding: 12px;
-      border-radius: var(--radius-md);
-    }
-    body.dashboard-mode .author-name {
-      font-size: 13px;
-    }
-    body.dashboard-mode .author-institution {
-      font-size: 11px;
-      margin-bottom: 6px;
-    }
-    body.dashboard-mode .author-metric-value {
-      font-size: 18px;
-    }
-    body.dashboard-mode .author-metric-label {
       font-size: 9px;
     }
 
-    body.dashboard-mode .quick-links-section {
-      padding: 14px 16px;
-      border-radius: var(--radius-lg);
-      margin-bottom: 10px;
+    body.dashboard-mode .rank-badge-large {
+      padding: 4px 10px;
+      font-size: 18px;
     }
-    body.dashboard-mode .quick-links-grid {
+    body.dashboard-mode .conference-rank-title {
+      font-size: 12px;
+    }
+
+    body.dashboard-mode .v2-section {
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      border-radius: var(--radius-md);
+    }
+    body.dashboard-mode .section-title {
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    body.dashboard-mode .funding-item {
+      padding: 5px 8px;
+    }
+    body.dashboard-mode .funder-icon {
+      width: 22px; height: 22px;
+      font-size: 10px;
+    }
+    body.dashboard-mode .funder-name {
+      font-size: 11px;
+    }
+
+    body.dashboard-mode .authors-section {
+      margin-bottom: 6px;
+    }
+    body.dashboard-mode .authors-grid {
+      grid-template-columns: 1fr 1fr;
       gap: 6px;
     }
+    body.dashboard-mode .author-card {
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+    }
+    body.dashboard-mode .author-card .author-role {
+      font-size: 9px;
+      margin-bottom: 2px;
+    }
+    body.dashboard-mode .author-name {
+      font-size: 12px;
+      margin-bottom: 1px;
+    }
+    body.dashboard-mode .author-institution {
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+    body.dashboard-mode .author-metrics {
+      gap: 2px;
+    }
+    body.dashboard-mode .author-metric-value {
+      font-size: 15px;
+      line-height: 1.1;
+    }
+    body.dashboard-mode .author-metric-label {
+      font-size: 8px;
+    }
+    body.dashboard-mode .author-links {
+      margin-top: 4px;
+      gap: 3px;
+    }
+    body.dashboard-mode .author-links a {
+      font-size: 10px;
+      padding: 2px 6px;
+    }
+
+    body.dashboard-mode .quick-links-section {
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      margin-bottom: 6px;
+    }
+    body.dashboard-mode .quick-links-grid {
+      gap: 4px;
+    }
     body.dashboard-mode .quick-link {
-      padding: 6px 10px;
-      font-size: 11px;
+      padding: 4px 8px;
+      font-size: 10px;
       border-radius: var(--radius-sm);
     }
 
     body.dashboard-mode .refs-dashboard {
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 8px;
     }
     body.dashboard-mode .chart-card {
-      padding: 14px;
+      padding: 8px 10px;
+    }
+    body.dashboard-mode .chart-card-title {
+      font-size: 9px;
+      margin-bottom: 4px;
     }
     body.dashboard-mode .donut-chart {
-      width: 110px; height: 110px;
-      margin-bottom: 10px;
+      width: 85px; height: 85px;
+      margin-bottom: 6px;
     }
     body.dashboard-mode .donut-inner {
-      top: 16px; left: 16px; right: 16px; bottom: 16px;
+      top: 14px; left: 14px; right: 14px; bottom: 14px;
     }
     body.dashboard-mode .donut-total {
-      font-size: 18px;
+      font-size: 15px;
+    }
+    body.dashboard-mode .donut-sublabel {
+      font-size: 7px;
     }
     body.dashboard-mode .chart-legend {
-      gap: 6px;
-      font-size: 10px;
+      gap: 4px;
+      font-size: 9px;
     }
     body.dashboard-mode .refs-summary-table th,
     body.dashboard-mode .refs-summary-table td {
-      padding: 4px 6px;
+      padding: 3px 5px;
       font-size: 10px;
     }
 
