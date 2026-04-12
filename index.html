@@ -3656,8 +3656,31 @@
           sourceIds.add(srcId.replace('https://openalex.org/', ''));
           workSourceMap.set(w.id, srcId.replace('https://openalex.org/', ''));
         } else if (srcType === 'conference' || w.type === 'proceedings-article') {
-          // Try CORE lookup
-          const coreMatch = lookupCOREConference(srcName);
+          // Try CORE lookup with multiple strategies
+          let coreMatch = lookupCOREConference(srcName);
+
+          // Strategy 2: Try extracting acronym from venue name  
+          if (!coreMatch && srcName) {
+            // Match patterns like "CVPR 2022", "ACM SIGKDD", "Proceedings of AAAI"
+            const acronymPatterns = [
+              /\b([A-Z][A-Z0-9]{2,}(?:[-/][A-Z0-9]+)?)\b/,  // standalone uppercase acronym
+              /Proceedings\s+of\s+(?:the\s+)?(?:\d+\w*\s+)?(?:.*?\s+)?([A-Z]{2,})/i, // "Proceedings of ... CONF"
+              /\(([A-Z]{2,}[A-Z0-9]*)\)/  // acronym in parentheses like (KDD)
+            ];
+            for (const pat of acronymPatterns) {
+              const m = srcName.match(pat);
+              if (m && m[1] && m[1].length >= 2) {
+                coreMatch = lookupCOREConference(m[1]);
+                if (coreMatch) break;
+              }
+            }
+          }
+
+          // Strategy 3: Full title fuzzy match
+          if (!coreMatch && srcName && srcName.length > 15) {
+            coreMatch = lookupCOREConference(srcName);
+          }
+
           if (coreMatch && coreRank.hasOwnProperty(coreMatch.rank)) {
             coreRank[coreMatch.rank]++;
           }
