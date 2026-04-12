@@ -11,6 +11,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="core_rankings.js"></script>
   <script src="ccf_rankings.js"></script>
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <style>
     /* ===================== DESIGN SYSTEM ===================== */
     :root {
@@ -1386,6 +1387,24 @@
       min-width: 40px;
       text-align: center;
     }
+    .pdf-export-btn {
+      padding: 5px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: inherit;
+      background: var(--accent-indigo);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition);
+      letter-spacing: 0.3px;
+    }
+    .pdf-export-btn:hover {
+      background: var(--accent-indigo-light);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(191, 90, 30, 0.3);
+    }
     .pdf-canvas-wrap {
       flex: 1;
       overflow: auto;
@@ -1393,12 +1412,209 @@
       align-items: flex-start;
       justify-content: center;
       padding: 16px;
+      position: relative; /* important for popups */
     }
-    .pdf-canvas-wrap canvas {
-      max-width: 100%;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    
+    .pdf-page-container {
+      position: relative;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08); /* moved shadow to wrapper */
+    }
+    .pdf-page-canvas {
+      display: block;
       border-radius: 4px;
     }
+    
+    /* PDF.js Text Layer CSS overrides */
+    .textLayer {
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+      opacity: 0.2; /* To let developers see it. Normal uses opacity 0. But selection covers it anyway, wait, just set it to transparent and selection pseudo class colors it. */
+      line-height: 1;
+      color: transparent;
+      border-radius: 4px;
+    }
+    .textLayer span {
+      color: transparent;
+      position: absolute;
+      white-space: pre;
+      cursor: text;
+      transform-origin: 0% 0%;
+    }
+    .textLayer ::selection {
+      background: rgba(191, 90, 30, 0.3); /* match brand */
+      color: transparent;
+    }
+    
+    /* Visual Highlights overlaid manually */
+    .pdf-highlight {
+      position: absolute;
+      background: rgba(255, 235, 59, 0.4);
+      mix-blend-mode: multiply;
+      pointer-events: none; /* let user click through text layer */
+      border-radius: 2px;
+    }
+
+    /* Annotation Popup */
+    .annotation-popup {
+      position: absolute;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-md);
+      padding: 12px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .annotation-popup textarea {
+      width: 200px;
+      height: 60px;
+      font-family: inherit;
+      font-size: 13px;
+      padding: 8px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      resize: none;
+    }
+    .annotation-popup .popup-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+    .popup-btn {
+      padding: 4px 10px;
+      font-size: 11px;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .popup-btn.primary { background: var(--accent-indigo); color: white; }
+    .popup-btn.secondary { background: var(--bg-secondary); color: var(--text-secondary); }
+
+    /* Selection Action Bar (Copy / Search Google / Note) */
+    .selection-action-bar {
+      position: fixed;
+      display: flex;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-md);
+      z-index: 1001;
+      overflow: hidden;
+    }
+    .selection-action-bar button {
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .selection-action-bar button:hover {
+      background: var(--bg-secondary);
+      color: var(--accent-indigo);
+    }
+    .selection-action-bar button + button {
+      border-left: 1px solid var(--border-subtle);
+    }
+
+    /* Copy toast */
+    .copy-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 8px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 500;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .copy-toast.show { opacity: 1; }
+
+    /* PDF Search Bar */
+    .pdf-search-bar {
+      display: none;
+      padding: 6px 12px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-subtle);
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .pdf-search-bar.active { display: flex; }
+    .pdf-search-bar input {
+      flex: 1;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-family: inherit;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      background: var(--bg-input);
+      outline: none;
+      min-width: 120px;
+      max-width: 250px;
+    }
+    .pdf-search-bar input:focus {
+      border-color: var(--accent-indigo);
+    }
+    .pdf-search-nav {
+      padding: 3px 8px;
+      font-size: 11px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .pdf-search-nav:hover {
+      border-color: var(--accent-indigo);
+      background: var(--bg-secondary);
+    }
+    .pdf-search-info {
+      color: var(--text-muted);
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      min-width: 80px;
+    }
+    .pdf-search-close {
+      padding: 2px 6px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1;
+    }
+    .pdf-search-close:hover { color: var(--text-primary); }
+
+    /* Search highlights painted on TextLayer spans */
+    .search-highlight {
+      background: rgba(255, 235, 59, 0.5) !important;
+      color: transparent !important;
+      border-radius: 2px;
+    }
+    .search-highlight-active {
+      background: rgba(255, 120, 0, 0.6) !important;
+      color: transparent !important;
+      border-radius: 2px;
+    }
+
     .pdf-placeholder {
       display: flex;
       flex-direction: column;
@@ -1769,11 +1985,20 @@
             <div class="pdf-viewer-toolbar">
               <span class="pdf-viewer-title" id="pdf-viewer-title">📄 PDF Viewer</span>
               <div class="pdf-viewer-controls">
+                <button class="pdf-export-btn" id="pdf-export-btn" onclick="exportAnnotatedPdf()" style="margin-right: 12px; display: none;">⬇ Export PDF</button>
+                <button class="pdf-zoom-btn" id="pdf-search-toggle" onclick="togglePdfSearch()" title="Search in PDF (Ctrl+F)">Search</button>
                 <span class="pdf-file-info" id="pdf-file-info"></span>
                 <button class="pdf-zoom-btn" onclick="pdfZoom(-0.15)">−</button>
                 <span class="pdf-zoom-info" id="pdf-zoom-info">100%</span>
                 <button class="pdf-zoom-btn" onclick="pdfZoom(0.15)">+</button>
               </div>
+            </div>
+            <div class="pdf-search-bar" id="pdf-search-bar">
+              <input type="text" id="pdf-search-input" placeholder="Search in PDF..." oninput="performPdfSearch(this.value)" />
+              <button class="pdf-search-nav" onclick="navigateSearchResult(-1)">Prev</button>
+              <button class="pdf-search-nav" onclick="navigateSearchResult(1)">Next</button>
+              <span class="pdf-search-info" id="pdf-search-info"></span>
+              <button class="pdf-search-close" onclick="togglePdfSearch()">✕</button>
             </div>
             <div class="pdf-canvas-wrap" id="pdf-canvas-wrap">
               <div class="pdf-placeholder" id="pdf-placeholder">
@@ -1821,8 +2046,9 @@
 
     // ===================== PDF VIEWER STATE =====================
     let pdfViewerDoc = null;
-    let pdfViewerScale = 1.0; /* Increased default visual scale or handle via CSS, start at 1.0 */
+    let pdfViewerScale = 1.0; 
     let pdfViewerArrayBuffer = null; 
+    let userAnnotations = []; // [{ pageNum, rectPdf: {x, y, width, height}, note, color }]
 
     // Render all pages for continuous scrolling
     async function renderAllPdfPages() {
@@ -1833,16 +2059,42 @@
       const pixelRatio = window.devicePixelRatio || 1;
 
       for (let pageNum = 1; pageNum <= pdfViewerDoc.numPages; pageNum++) {
+        // Create wrapper
+        const pageWrapper = document.createElement('div');
+        pageWrapper.className = 'pdf-page-container';
+        pageWrapper.dataset.page = pageNum;
+        
         // Create canvas for the page
         const canvas = document.createElement('canvas');
         canvas.className = 'pdf-page-canvas';
-        container.appendChild(canvas);
+        
+        // Create Text Layer
+        const textLayerDiv = document.createElement('div');
+        textLayerDiv.className = 'textLayer';
+        
+        // Highlight Layer for custom annotations
+        const highlightLayerDiv = document.createElement('div');
+        highlightLayerDiv.className = 'highlightLayer';
+        highlightLayerDiv.style.position = 'absolute';
+        highlightLayerDiv.style.left = '0';
+        highlightLayerDiv.style.top = '0';
+        highlightLayerDiv.style.pointerEvents = 'none';
+
+        pageWrapper.appendChild(canvas);
+        pageWrapper.appendChild(highlightLayerDiv);
+        pageWrapper.appendChild(textLayerDiv);
+        container.appendChild(pageWrapper);
 
         const page = await pdfViewerDoc.getPage(pageNum);
         const ctx = canvas.getContext('2d');
         const viewport = page.getViewport({ scale: pdfViewerScale });
         
-        // High-DPI canvas handling to prevent blurriness
+        pageWrapper.dataset.vw = viewport.width;
+        pageWrapper.dataset.vh = viewport.height;
+        pageWrapper.style.width = viewport.width + 'px';
+        pageWrapper.style.height = viewport.height + 'px';
+
+        // High-DPI canvas handling
         canvas.width = viewport.width * pixelRatio;
         canvas.height = viewport.height * pixelRatio;
         canvas.style.width = viewport.width + 'px';
@@ -1850,11 +2102,29 @@
         
         ctx.scale(pixelRatio, pixelRatio);
         
-        // Let it render asynchronously
+        // Render Canvas
         page.render({ canvasContext: ctx, viewport: viewport });
+
+        // Render Text Layer
+        page.getTextContent().then(textContent => {
+          pdfjsLib.renderTextLayer({
+            textContent: textContent,
+            container: textLayerDiv,
+            viewport: viewport,
+            textDivs: []
+          });
+        }).catch(e => console.warn('Text layer error:', e));
+
+        // Restore existing annotations visually
+        renderVisualHighlights(pageNum, highlightLayerDiv, viewport);
       }
       
       document.getElementById('pdf-file-info').textContent = `${pdfViewerDoc.numPages} Pages`;
+      setupAnnotationListeners();
+      
+      if (pdfViewerArrayBuffer) {
+         document.getElementById('pdf-export-btn').style.display = 'inline-block';
+      }
     }
 
     function pdfZoom(delta) {
@@ -1886,7 +2156,9 @@
       const file = e.target.files[0];
       if (!file) return;
       file.arrayBuffer().then(buf => {
-        pdfViewerArrayBuffer = buf.slice(0);
+        pdfViewerArrayBuffer = buf.slice(0); // keep clean copy
+        userAnnotations = []; // reset
+        document.getElementById('pdf-export-btn').style.display = 'inline-block';
         loadPdfIntoViewer(buf, file.name);
       });
     }
@@ -1901,6 +2173,394 @@
       } catch (e) {
         console.log('Could not load OA PDF:', e.message);
       }
+    }
+
+    // ===================== ANNOTATE & EXPORT (PDF-LIB) =====================
+    let activePopup = null;
+    let annotationListenersBound = false;
+
+    function setupAnnotationListeners() {
+      if (annotationListenersBound) return; // prevent duplicate bindings on re-render
+      annotationListenersBound = true;
+      
+      const container = document.getElementById('pdf-pages-container');
+      
+      container.addEventListener('mouseup', (e) => {
+        // Don't show action bar if clicking inside an existing popup or action bar
+        if (activePopup && activePopup.contains(e.target)) return;
+        if (e.target.closest('.selection-action-bar')) return;
+        
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed) return;
+
+        const text = selection.toString().trim();
+        if (!text) return;
+
+        // Find which page this selection belongs to
+        let targetNode = selection.anchorNode;
+        if (targetNode.nodeType === 3) targetNode = targetNode.parentNode;
+        const pageContainer = targetNode.closest('.pdf-page-container');
+        if (!pageContainer) return;
+
+        const pageNum = parseInt(pageContainer.dataset.page);
+        
+        // Get bounding rect of selection relative to the page container
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        const pageRect = pageContainer.getBoundingClientRect();
+        
+        // Calculate relative coordinates in CSS pixels
+        const relX = rect.left - pageRect.left;
+        const relY = rect.top - pageRect.top;
+        
+        // Convert to PDF points
+        const vw = parseFloat(pageContainer.dataset.vw);
+        const vh = parseFloat(pageContainer.dataset.vh);
+        const cssWidth = pageContainer.offsetWidth;
+        const cssHeight = pageContainer.offsetHeight;
+
+        const scaleX = vw / cssWidth;
+        const scaleY = vh / cssHeight;
+
+        const pdfX = relX * scaleX;
+        const pdfYTop = relY * scaleY;
+        const pdfHeight = rect.height * scaleY;
+        const pdfYBottom = vh - pdfYTop - pdfHeight; 
+        const pdfWidth = rect.width * scaleX;
+
+        const annotationData = {
+          pageNum: pageNum,
+          rectPdf: { x: pdfX, y: pdfYBottom, width: pdfWidth, height: pdfHeight },
+          text: text,
+          cssRect: { left: relX, top: relY, width: rect.width, height: rect.height }
+        };
+
+        // Show 3-button context menu instead of jumping to annotation popup
+        showSelectionActionBar(e.pageX, e.pageY, text, annotationData, pageContainer);
+      });
+      
+      // Auto-close popup/action bar if clicking outside
+      document.addEventListener('mousedown', (e) => {
+         if (activePopup && !activePopup.contains(e.target)) {
+            activePopup.remove();
+            activePopup = null;
+         }
+      });
+    }
+
+    // ===================== SELECTION ACTION BAR =====================
+    function showSelectionActionBar(x, y, text, annotationData, pageContainer) {
+      if (activePopup) activePopup.remove();
+      
+      const bar = document.createElement('div');
+      bar.className = 'selection-action-bar';
+      bar.style.left = x + 'px';
+      bar.style.top = (y - 40) + 'px'; // appear above the selection
+      
+      // Copy button
+      const btnCopy = document.createElement('button');
+      btnCopy.textContent = 'Copy';
+      btnCopy.onclick = () => {
+        navigator.clipboard.writeText(text).then(() => {
+          showCopyToast('Copied to clipboard');
+        }).catch(() => {
+          // Fallback for older browsers
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showCopyToast('Copied to clipboard');
+        });
+        bar.remove();
+        activePopup = null;
+        window.getSelection().removeAllRanges();
+      };
+      
+      // Search Google button
+      const btnGoogle = document.createElement('button');
+      btnGoogle.textContent = 'Search Google';
+      btnGoogle.onclick = () => {
+        window.open('https://www.google.com/search?q=' + encodeURIComponent(text), '_blank');
+        bar.remove();
+        activePopup = null;
+        window.getSelection().removeAllRanges();
+      };
+      
+      // Note button (opens annotation popup)
+      const btnNote = document.createElement('button');
+      btnNote.textContent = 'Note';
+      btnNote.onclick = () => {
+        bar.remove();
+        activePopup = null;
+        showAnnotationPopup(x, y, annotationData, pageContainer);
+      };
+      
+      bar.appendChild(btnCopy);
+      bar.appendChild(btnGoogle);
+      bar.appendChild(btnNote);
+      
+      document.body.appendChild(bar);
+      activePopup = bar;
+      
+      // Prevent mousedown inside bar from triggering the auto-close
+      bar.addEventListener('mousedown', e => e.stopPropagation());
+    }
+
+    function showCopyToast(msg) {
+      let toast = document.getElementById('copy-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'copy-toast';
+        toast.className = 'copy-toast';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1500);
+    }
+
+    // ===================== PDF TEXT SEARCH =====================
+    let searchMatches = [];
+    let currentSearchIndex = -1;
+
+    function togglePdfSearch() {
+      const bar = document.getElementById('pdf-search-bar');
+      const isActive = bar.classList.toggle('active');
+      if (isActive) {
+        document.getElementById('pdf-search-input').focus();
+      } else {
+        clearPdfSearch();
+      }
+    }
+
+    function performPdfSearch(query) {
+      clearSearchHighlights();
+      searchMatches = [];
+      currentSearchIndex = -1;
+      const infoEl = document.getElementById('pdf-search-info');
+      
+      if (!query || query.length < 2) {
+        infoEl.textContent = '';
+        return;
+      }
+      
+      const lowerQuery = query.toLowerCase();
+      const allSpans = document.querySelectorAll('#pdf-pages-container .textLayer span');
+      
+      allSpans.forEach(span => {
+        if (span.textContent.toLowerCase().includes(lowerQuery)) {
+          span.classList.add('search-highlight');
+          searchMatches.push(span);
+        }
+      });
+      
+      if (searchMatches.length > 0) {
+        currentSearchIndex = 0;
+        searchMatches[0].classList.remove('search-highlight');
+        searchMatches[0].classList.add('search-highlight-active');
+        searchMatches[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        infoEl.textContent = `1 of ${searchMatches.length}`;
+      } else {
+        infoEl.textContent = query.length >= 2 ? 'No matches' : '';
+      }
+    }
+
+    function navigateSearchResult(direction) {
+      if (searchMatches.length === 0) return;
+      
+      // Remove active from current
+      searchMatches[currentSearchIndex].classList.remove('search-highlight-active');
+      searchMatches[currentSearchIndex].classList.add('search-highlight');
+      
+      // Move index
+      currentSearchIndex += direction;
+      if (currentSearchIndex >= searchMatches.length) currentSearchIndex = 0;
+      if (currentSearchIndex < 0) currentSearchIndex = searchMatches.length - 1;
+      
+      // Activate new
+      searchMatches[currentSearchIndex].classList.remove('search-highlight');
+      searchMatches[currentSearchIndex].classList.add('search-highlight-active');
+      searchMatches[currentSearchIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      document.getElementById('pdf-search-info').textContent = `${currentSearchIndex + 1} of ${searchMatches.length}`;
+    }
+
+    function clearSearchHighlights() {
+      document.querySelectorAll('.search-highlight, .search-highlight-active').forEach(el => {
+        el.classList.remove('search-highlight', 'search-highlight-active');
+      });
+    }
+
+    function clearPdfSearch() {
+      clearSearchHighlights();
+      searchMatches = [];
+      currentSearchIndex = -1;
+      document.getElementById('pdf-search-input').value = '';
+      document.getElementById('pdf-search-info').textContent = '';
+    }
+
+    // Keyboard shortcut: Ctrl+F / Cmd+F to open PDF search when viewer is active
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        if (pdfViewerDoc) {
+          e.preventDefault();
+          const bar = document.getElementById('pdf-search-bar');
+          if (!bar.classList.contains('active')) {
+            togglePdfSearch();
+          } else {
+            document.getElementById('pdf-search-input').focus();
+          }
+        }
+      }
+      // Escape to close search
+      if (e.key === 'Escape') {
+        const bar = document.getElementById('pdf-search-bar');
+        if (bar && bar.classList.contains('active')) {
+          togglePdfSearch();
+        }
+      }
+      // Enter in search navigates to next
+      if (e.key === 'Enter' && document.activeElement?.id === 'pdf-search-input') {
+        navigateSearchResult(e.shiftKey ? -1 : 1);
+      }
+    });
+
+    function showAnnotationPopup(x, y, annotationData, pageContainer) {
+      if (activePopup) activePopup.remove();
+      
+      const popup = document.createElement('div');
+      popup.className = 'annotation-popup';
+      popup.style.left = x + 'px';
+      popup.style.top = y + 15 + 'px';
+      
+      popup.innerHTML = `
+        <div style="font-size: 11px; font-weight: 600; color: var(--accent-indigo);">Add Note to Highlight</div>
+        <textarea id="annotation-note" placeholder="Type your notes here..."></textarea>
+        <div class="popup-actions">
+          <button class="popup-btn secondary" id="btn-cancel-note">Cancel</button>
+          <button class="popup-btn primary" id="btn-save-note">Save Bounding Box</button>
+        </div>
+      `;
+      
+      document.body.appendChild(popup);
+      activePopup = popup;
+      
+      // Focus
+      setTimeout(() => document.getElementById('annotation-note').focus(), 50);
+
+      document.getElementById('btn-cancel-note').onclick = () => {
+        popup.remove();
+        activePopup = null;
+        window.getSelection().removeAllRanges();
+      };
+
+      document.getElementById('btn-save-note').onclick = () => {
+        annotationData.note = document.getElementById('annotation-note').value.trim();
+        userAnnotations.push(annotationData);
+        
+        // Draw visual highlight locally immediately
+        const hl = document.createElement('div');
+        hl.className = 'pdf-highlight';
+        hl.style.left = annotationData.cssRect.left + 'px';
+        hl.style.top = annotationData.cssRect.top + 'px';
+        hl.style.width = annotationData.cssRect.width + 'px';
+        hl.style.height = annotationData.cssRect.height + 'px';
+        
+        pageContainer.querySelector('.highlightLayer').appendChild(hl);
+        
+        popup.remove();
+        activePopup = null;
+        window.getSelection().removeAllRanges();
+      };
+      
+      // Prevent mousedown inside popup from triggering the auto-close
+      popup.addEventListener('mousedown', e => e.stopPropagation());
+    }
+
+    function renderVisualHighlights(pageNum, layerDiv, viewport) {
+       layerDiv.innerHTML = '';
+       const pageNotes = userAnnotations.filter(a => a.pageNum === pageNum);
+       // Reconstruct css positions based on current viewport
+       for (const a of pageNotes) {
+          const cssWidth = layerDiv.parentElement.offsetWidth;
+          const cssHeight = layerDiv.parentElement.offsetHeight;
+          const scaleX = cssWidth / viewport.width;
+          const scaleY = cssHeight / viewport.height;
+          
+          const relX = a.rectPdf.x * scaleX;
+          // Invert Y back
+          const relY = (viewport.height - a.rectPdf.y - a.rectPdf.height) * scaleY;
+          const relW = a.rectPdf.width * scaleX;
+          const relH = a.rectPdf.height * scaleY;
+          
+          const hl = document.createElement('div');
+          hl.className = 'pdf-highlight';
+          hl.style.left = relX + 'px';
+          hl.style.top = relY + 'px';
+          hl.style.width = relW + 'px';
+          hl.style.height = relH + 'px';
+          layerDiv.appendChild(hl);
+       }
+    }
+
+    async function exportAnnotatedPdf() {
+      if (!pdfViewerArrayBuffer) return;
+      if (typeof PDFLib === 'undefined') {
+         alert('PDFLib is not loaded yet.');
+         return;
+      }
+      
+      const btn = document.getElementById('pdf-export-btn');
+      btn.textContent = 'Processing...';
+      
+      try {
+        const pdfDoc = await PDFLib.PDFDocument.load(pdfViewerArrayBuffer);
+        
+        for (const ann of userAnnotations) {
+           // pdf-lib pages are 0-indexed
+           const page = pdfDoc.getPage(ann.pageNum - 1);
+           
+           // Draw yellow rectangle highlight
+           page.drawRectangle({
+              x: ann.rectPdf.x,
+              y: ann.rectPdf.y,
+              width: ann.rectPdf.width,
+              height: ann.rectPdf.height,
+              color: PDFLib.rgb(1, 1, 0),
+              opacity: 0.4
+           });
+           
+           // If they wrote a note, place a small text indicator nearby
+           if (ann.note) {
+              page.drawText(ann.note, {
+                 x: ann.rectPdf.x,
+                 // Place slightly above the highlight box
+                 y: ann.rectPdf.y + ann.rectPdf.height + 2,
+                 size: 10,
+                 color: PDFLib.rgb(0.8, 0.3, 0.1) // match our brand
+              });
+           }
+        }
+        
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ScholarLens_Annotated.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Export error:', err);
+        alert('Failed to export PDF: ' + err.message);
+      }
+      
+      btn.textContent = '⬇ Export PDF';
     }
 
     // ===================== TAB SWITCHING =====================
