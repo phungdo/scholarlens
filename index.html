@@ -1702,10 +1702,54 @@
     }
 
     body.dashboard-mode .metrics-grid {
-      grid-template-columns: 1fr 1fr;
+      display: flex;
+      flex-wrap: wrap;
       gap: 6px;
       margin-bottom: 6px;
     }
+
+    /* Stat pill compact metrics */
+    .stat-pill {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      min-width: 60px;
+      text-align: center;
+    }
+    .stat-pill-link {
+      text-decoration: none;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .stat-pill-link:hover {
+      border-color: var(--accent-amber);
+      box-shadow: 0 1px 4px rgba(191,90,30,0.15);
+    }
+    .stat-val {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent-amber);
+      line-height: 1.2;
+    }
+    .stat-key {
+      font-size: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .quartile-color-Q1 { color: #2e7d32 !important; }
+    .quartile-color-Q2 { color: #f57c00 !important; }
+    .quartile-color-Q3 { color: #e65100 !important; }
+    .quartile-color-Q4 { color: #c62828 !important; }
+    .stat-core-astar { color: #b71c1c !important; }
+    .stat-core-a { color: #e65100 !important; }
+    .stat-core-b { color: #f57c00 !important; }
+    .stat-core-c { color: var(--text-muted) !important; }
     body.dashboard-mode .metric-card {
       padding: 10px;
       border-radius: var(--radius-sm);
@@ -3163,155 +3207,83 @@
 
     function renderMetrics(work, source, coreRanking) {
       const grid = document.getElementById('metrics-grid');
-      let cards = '';
-
-      // Citation Percentile Card
       const percentile = work.citation_normalized_percentile;
       const fwci = work.fwci;
       const citedBy = work.cited_by_count || 0;
-      cards += `
-        <div class="metric-card">
-          <div class="metric-card-header">
-            <span class="metric-card-title">Citation Impact</span>
-            <span class="metric-card-icon">📊</span>
-          </div>
-          <div class="metric-value gradient-text">${citedBy.toLocaleString()}</div>
-          <div class="metric-label">Total Citations</div>
-          ${fwci != null ? `
-            <div class="metric-detail">
-              <div class="metric-detail-row">
-                <span class="metric-detail-key">FWCI</span>
-                <span class="metric-detail-val">${fwci.toFixed(2)}</span>
-              </div>
-              ${percentile ? `
-                <div class="metric-detail-row">
-                  <span class="metric-detail-key">Percentile</span>
-                  <span class="metric-detail-val">${(percentile.value * 100).toFixed(1)}%</span>
-                </div>
-                <div class="percentile-bar">
-                  <div class="percentile-fill" style="width: ${percentile.value * 100}%"></div>
-                </div>
-                ${percentile.is_in_top_10_percent ? '<div style="color: var(--accent-emerald); font-size: 12px; margin-top: 6px; font-weight: 600;">🏆 Top 10%</div>' : ''}
-                ${percentile.is_in_top_1_percent ? '<div style="color: var(--accent-amber); font-size: 12px; margin-top: 6px; font-weight: 600;">🥇 Top 1%!</div>' : ''}
-              ` : ''}
-            </div>
-          ` : ''}
-        </div>
-      `;
+      let pills = '';
 
-      // Journal/Source Metrics Card (V2: with Quartile Badge)
+      // Citations
+      pills += `<div class="stat-pill">
+        <span class="stat-val">${citedBy.toLocaleString()}</span>
+        <span class="stat-key">Citations</span>
+      </div>`;
+
+      // FWCI
+      if (fwci != null) {
+        pills += `<div class="stat-pill">
+          <span class="stat-val">${fwci.toFixed(2)}</span>
+          <span class="stat-key">FWCI</span>
+        </div>`;
+      }
+
+      // Percentile
+      if (percentile) {
+        const pctVal = (percentile.value * 100).toFixed(1);
+        const topBadge = percentile.is_in_top_1_percent ? ' 🥇' : percentile.is_in_top_10_percent ? ' 🏆' : '';
+        pills += `<div class="stat-pill">
+          <span class="stat-val">${pctVal}%${topBadge}</span>
+          <span class="stat-key">Percentile</span>
+        </div>`;
+      }
+
+      // Journal metrics
       if (source) {
-        const hIndex = source.summary_stats?.h_index;
         const impactProxy = source.summary_stats?.['2yr_mean_citedness'];
-        const i10Index = source.summary_stats?.i10_index;
-        const worksCount = source.works_count;
-        const citedByCount = source.cited_by_count;
-
-        // V2: Estimate Scimago-style quartile
+        const hIndex = source.summary_stats?.h_index;
         const quartile = estimateQuartile(impactProxy);
         const issn = source.issn_l || (source.issn && source.issn[0]) || '';
         const scimagoUrl = issn
           ? `https://www.scimagojr.com/journalsearch.php?q=${issn}&tip=issn`
           : `https://www.scimagojr.com/journalsearch.php?q=${encodeURIComponent(source.display_name || '')}&tip=jou`;
 
-        cards += `
-          <div class="metric-card">
-            <div class="metric-card-header">
-              <span class="metric-card-title">Journal / Source Metrics</span>
-              <span class="metric-card-icon">📰</span>
-            </div>
-            ${quartile ? `
-              <div class="quartile-badge-wrap">
-                <div class="quartile-badge q-${quartile.key}">${quartile.label}</div>
-                <div class="quartile-info">
-                  <div class="quartile-name">Estimated ${quartile.label} Journal</div>
-                  <div class="quartile-label">Based on IF proxy: ${impactProxy?.toFixed(2) || '—'}</div>
-                  <a href="${scimagoUrl}" target="_blank" class="scimago-link">🔍 Verify on Scimago →</a>
-                </div>
-              </div>
-            ` : ''}
-            ${hIndex != null ? `
-              <div class="metric-value gradient-text">${hIndex.toLocaleString()}</div>
-              <div class="metric-label">h-index of ${escapeHtml(source.display_name || 'source')}</div>
-            ` : `
-              <div class="metric-value" style="color: var(--text-muted);">—</div>
-              <div class="metric-label">No h-index data</div>
-            `}
-            <div class="metric-detail">
-              ${impactProxy != null ? `
-                <div class="metric-detail-row">
-                  <span class="metric-detail-key">Impact Factor (proxy)</span>
-                  <span class="metric-detail-val" style="color: var(--accent-emerald)">${impactProxy.toFixed(3)}</span>
-                </div>
-              ` : ''}
-              ${i10Index != null ? `
-                <div class="metric-detail-row">
-                  <span class="metric-detail-key">i10-index</span>
-                  <span class="metric-detail-val">${i10Index.toLocaleString()}</span>
-                </div>
-              ` : ''}
-              ${worksCount ? `
-                <div class="metric-detail-row">
-                  <span class="metric-detail-key">Total Works</span>
-                  <span class="metric-detail-val">${worksCount.toLocaleString()}</span>
-                </div>
-              ` : ''}
-              ${citedByCount ? `
-                <div class="metric-detail-row">
-                  <span class="metric-detail-key">Total Citations</span>
-                  <span class="metric-detail-val">${citedByCount.toLocaleString()}</span>
-                </div>
-              ` : ''}
-              ${source.is_oa ? `
-                <div class="metric-detail-row">
-                  <span class="metric-detail-key">Open Access</span>
-                  <span class="metric-detail-val" style="color: var(--accent-emerald)">✅ Yes</span>
-                </div>
-              ` : ''}
-            </div>
-          </div>
-        `;
+        if (quartile) {
+          pills += `<a href="${scimagoUrl}" target="_blank" class="stat-pill stat-pill-link" title="Verify on Scimago">
+            <span class="stat-val quartile-color-${quartile.key}">${quartile.label}</span>
+            <span class="stat-key">Quartile</span>
+          </a>`;
+        }
+        if (impactProxy != null) {
+          pills += `<div class="stat-pill">
+            <span class="stat-val">${impactProxy.toFixed(2)}</span>
+            <span class="stat-key">IF proxy</span>
+          </div>`;
+        }
+        if (hIndex != null) {
+          pills += `<div class="stat-pill">
+            <span class="stat-val">${hIndex}</span>
+            <span class="stat-key">h-index</span>
+          </div>`;
+        }
       }
 
-      // CORE Conference Ranking Card
+      // CORE Ranking
       const sourceType = work.primary_location?.source?.type || '';
       const isConfType = sourceType === 'conference' || work.type === 'proceedings-article' || work.type === 'proceedings';
-      if (coreRanking || isConfType) {
-        const rankClass = coreRanking ? {
-          'A*': 'rank-astar', 'A': 'rank-a', 'B': 'rank-b', 'C': 'rank-c'
-        }[coreRanking.rank] || 'rank-c' : '';
-
-        cards += `
-          <div class="metric-card">
-            <div class="metric-card-header">
-              <span class="metric-card-title">CORE Conference Rank</span>
-              <span class="metric-card-icon">🏅</span>
-            </div>
-            ${coreRanking ? `
-              <div class="conference-rank-display">
-                <div class="rank-badge rank-badge-large ${rankClass}">${escapeHtml(coreRanking.rank)}</div>
-                <div class="conference-rank-info">
-                  <div class="conference-rank-title">${escapeHtml(coreRanking.acronym || '')}</div>
-                  <div class="metric-label">${escapeHtml(coreRanking.title)}</div>
-                  <div class="conference-rank-source" style="margin-top: 4px;">Source: ${escapeHtml(coreRanking.source)}</div>
-                </div>
-              </div>
-            ` : `
-              <div class="metric-value" style="color: var(--text-muted); font-size: 24px;">Not found</div>
-              <div class="metric-label">Conference not in local database</div>
-            `}
-            <div class="metric-detail">
-              <div class="metric-detail-row">
-                <a href="https://portal.core.edu.au/conf-ranks/?search=${encodeURIComponent(work.primary_location?.source?.display_name || '')}&by=all&source=all&sort=atitle&page=1" target="_blank" style="color: var(--accent-indigo-light); text-decoration: none; font-size: 13px;">
-                  🔍 Search CORE Portal →
-                </a>
-              </div>
-            </div>
-          </div>
-        `;
+      if (coreRanking) {
+        const coreUrl = `https://portal.core.edu.au/conf-ranks/?search=${encodeURIComponent(work.primary_location?.source?.display_name || '')}&by=all&source=all&sort=atitle&page=1`;
+        pills += `<a href="${coreUrl}" target="_blank" class="stat-pill stat-pill-link" title="${escapeHtml(coreRanking.title)}">
+          <span class="stat-val stat-core-${coreRanking.rank === 'A*' ? 'astar' : coreRanking.rank.toLowerCase()}">${escapeHtml(coreRanking.rank)}</span>
+          <span class="stat-key">CORE</span>
+        </a>`;
+      } else if (isConfType) {
+        const coreUrl = `https://portal.core.edu.au/conf-ranks/?search=${encodeURIComponent(work.primary_location?.source?.display_name || '')}&by=all&source=all&sort=atitle&page=1`;
+        pills += `<a href="${coreUrl}" target="_blank" class="stat-pill stat-pill-link">
+          <span class="stat-val" style="color:var(--text-muted);">—</span>
+          <span class="stat-key">CORE</span>
+        </a>`;
       }
 
-      grid.innerHTML = cards;
+      grid.innerHTML = pills;
     }
 
     function renderAuthors(authors) {
