@@ -1988,8 +1988,9 @@
                 <button class="pdf-zoom-btn" id="pdf-search-toggle" onclick="togglePdfSearch()" title="Search in PDF (Ctrl+F)">Search</button>
                 <span class="pdf-file-info" id="pdf-file-info"></span>
                 <button class="pdf-zoom-btn" onclick="pdfZoom(-0.15)">−</button>
-                <span class="pdf-zoom-info" id="pdf-zoom-info">100%</span>
+                <span class="pdf-zoom-info" id="pdf-zoom-info">Fit</span>
                 <button class="pdf-zoom-btn" onclick="pdfZoom(0.15)">+</button>
+                <button class="pdf-zoom-btn" onclick="pdfFitWidth()" title="Fit to width">Fit</button>
               </div>
             </div>
             <div class="pdf-search-bar" id="pdf-search-bar">
@@ -2126,25 +2127,45 @@
       }
     }
 
+    function calcFitScale() {
+      if (!pdfViewerDoc) return 1.0;
+      // Get container width (minus some padding so it doesn't overflow)
+      const wrap = document.getElementById('pdf-canvas-wrap');
+      const availWidth = (wrap ? wrap.clientWidth : window.innerWidth) - 32;
+      // Get the natural width of page 1 at scale=1
+      return pdfViewerDoc.getPage(1).then(page => {
+        const naturalVp = page.getViewport({ scale: 1.0 });
+        return Math.max(0.5, availWidth / naturalVp.width);
+      });
+    }
+
     function pdfZoom(delta) {
       // Limit zoom range
-      pdfViewerScale = Math.max(0.75, Math.min(3.0, pdfViewerScale + delta));
+      pdfViewerScale = Math.max(0.5, Math.min(4.0, pdfViewerScale + delta));
       document.getElementById('pdf-zoom-info').textContent = Math.round(pdfViewerScale * 100) + '%';
       if (pdfViewerDoc) renderAllPdfPages();
+    }
+
+    async function pdfFitWidth() {
+      if (!pdfViewerDoc) return;
+      pdfViewerScale = await calcFitScale();
+      document.getElementById('pdf-zoom-info').textContent = Math.round(pdfViewerScale * 100) + '%';
+      renderAllPdfPages();
     }
 
     async function loadPdfIntoViewer(data, name) {
       try {
         pdfViewerDoc = await pdfjsLib.getDocument({ data: data }).promise;
-        pdfViewerScale = 1.25; // Slightly larger default for readability
-        document.getElementById('pdf-placeholder').style.display = 'none';
         
+        document.getElementById('pdf-placeholder').style.display = 'none';
         const container = document.getElementById('pdf-pages-container');
         container.style.display = 'flex';
-        
         document.getElementById('pdf-viewer-title').textContent = '📄 ' + (name || 'PDF');
+
+        // Auto-fit to panel width
+        pdfViewerScale = await calcFitScale();
         document.getElementById('pdf-zoom-info').textContent = Math.round(pdfViewerScale * 100) + '%';
-        
+
         renderAllPdfPages();
       } catch (e) {
         console.error('PDF viewer error:', e);
@@ -2424,6 +2445,15 @@
       if (e.key === 'Enter' && document.activeElement?.id === 'pdf-search-input') {
         navigateSearchResult(e.shiftKey ? -1 : 1);
       }
+    });
+
+    // Auto-refit PDF on window resize (debounced 300ms)
+    let pdfResizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(pdfResizeTimer);
+      pdfResizeTimer = setTimeout(() => {
+        if (pdfViewerDoc) pdfFitWidth();
+      }, 300);
     });
 
     function showAnnotationPopup(x, y, annotationData, pageContainer) {
