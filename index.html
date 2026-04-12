@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;400;500;600;700;1,9..40,400&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="core_rankings.js"></script>
+  <script src="ccf_rankings.js"></script>
   <style>
     /* ===================== DESIGN SYSTEM ===================== */
     :root {
@@ -1140,11 +1141,10 @@
     /* ===================== V2: REFERENCE ANALYSIS ===================== */
     .refs-dashboard {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 20px;
       margin-top: 20px;
     }
-    @media (max-width: 768px) { .refs-dashboard { grid-template-columns: 1fr; } }
     .chart-card {
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
@@ -2012,9 +2012,29 @@
     async function fetchOpenAlex(endpoint) {
       const separator = endpoint.includes('?') ? '&' : '?';
       const url = `${OPENALEX_BASE}${endpoint}${separator}mailto=${OPENALEX_EMAIL}`;
+      
+      // Check cache first
+      const cacheKey = `oa_cache_${url}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch(e) {}
+      }
+
       const response = await fetch(url);
       if (!response.ok) throw new Error(`OpenAlex API error: ${response.status}`);
-      return response.json();
+      const data = await response.json();
+      
+      // Save to cache (handle potential QuotaExceededError implicitly by wrapped try-catch)
+      try {
+        sessionStorage.setItem(cacheKey, JSON.stringify(data));
+      } catch (e) {
+        // If sessionStorage is full, we just silently fail and don't cache
+        console.warn('SessionStorage quota exceeded, caching disabled for this query');
+      }
+      
+      return data;
     }
 
     async function fetchCrossRef(doi) {
@@ -2056,14 +2076,51 @@
         try {
           workData = await fetchOpenAlex(`/works/doi:${doi}`);
         } catch (e) {
-          throw new Error(`Paper not found in OpenAlex for DOI: ${doi}. This DOI may be very new or incorrect.`);
+          console.warn('OpenAlex fetch failed, falling back to CrossRef...', e);
+          setLoadingStep('OpenAlex unreachable. Falling back to CrossRef...');
+          try {
+            const crData = await fetchCrossRef(doi);
+            const msg = crData.message || {};
+            // Map CrossRef to OpenAlex structure for graceful UI degradation
+            workData = {
+              id: 'crossref',
+              title: msg.title ? msg.title[0] : 'Unknown Title',
+              publication_year: msg.created?.['date-parts']?.[0]?.[0] || '',
+              cited_by_count: msg['is-referenced-by-count'] || 0,
+              type: msg.type === 'journal-article' ? 'article' : (msg.type === 'proceedings-article' ? 'proceedings-article' : 'other'),
+              open_access: { oa_status: 'closed' }, // Crossref rarely provides clear OA urls directly here
+              primary_location: {
+                source: {
+                  display_name: msg['container-title'] ? msg['container-title'][0] : '',
+                  type: msg.type === 'journal-article' ? 'journal' : 'conference',
+                  id: ''
+                }
+              },
+              authorships: (msg.author || []).map((a, i) => ({
+                author_position: i === 0 ? 'first' : (i === msg.author.length - 1 ? 'last' : 'middle'),
+                author: { display_name: `${a.given || ''} ${a.family || ''}`.trim() },
+                institutions: a.affiliation && a.affiliation.length > 0 ? [{ display_name: a.affiliation[0].name }] : []
+              })),
+              referenced_works: [], // CrossRef doesn't give us the graph references mapped
+              grants: (msg.funder || []).map(f => ({ funder_display_name: f.name, award_id: f.award ? f.award.join(', ') : '' })),
+              is_fallback: true
+            };
+            
+            showError("⚠️ Note: OpenAlex API unreachable. Operating in fallback mode via CrossRef. Advanced network metrics & reference portfolio analysis are unavailable.");
+            // Prevent auto-hiding the error banner later by forcing timeout or we leave it
+            setTimeout(() => { document.getElementById('error-banner').classList.add('active'); }, 500);
+            
+          } catch (crError) {
+            throw new Error(`Paper not found in OpenAlex or CrossRef API for DOI: ${doi}.`);
+          }
         }
 
         // Step 2: Get source (journal/conference) data
         setLoadingStep('Fetching journal/conference info...');
         let sourceData = null;
         const sourceId = workData.primary_location?.source?.id;
-        if (sourceId) {
+        // Don't hit endpoint if it's fallback or missing id
+        if (sourceId && !workData.is_fallback) {
           try {
             const sourceOAId = sourceId.replace('https://openalex.org/', '');
             sourceData = await fetchOpenAlex(`/sources/${sourceOAId}`);
@@ -2090,7 +2147,7 @@
 
         for (const authorship of keyAuthors) {
           const authorId = authorship.author?.id;
-          if (authorId) {
+          if (authorId && !workData.is_fallback) {
             try {
               const authorOAId = authorId.replace('https://openalex.org/', '');
               const authorData = await fetchOpenAlex(`/authors/${authorOAId}`);
@@ -2103,6 +2160,16 @@
             } catch (e) {
               console.warn('Could not fetch author:', e);
             }
+          } else if (workData.is_fallback) {
+             // Mock author data from Crossref payload
+             authorInfos.push({
+                display_name: authorship.author.display_name,
+                works_count: '?',
+                cited_by_count: '?',
+                position: authorship.author_position,
+                institutions: authorship.institutions,
+                is_corresponding: authorship.is_corresponding
+             });
           }
         }
 
@@ -2770,7 +2837,8 @@
 
       // Classify references
       const journalQ = { Q1: 0, Q2: 0, Q3: 0, Q4: 0 };
-      const confRank = { 'A*': 0, 'A': 0, 'B': 0, 'C': 0 };
+      const coreRank = { 'A*': 0, 'A': 0, 'B': 0, 'C': 0 };
+      const ccfRank = { 'A': 0, 'B': 0, 'C': 0 };
       let totalJournals = 0;
       let totalConfs = 0;
       let totalOther = 0;
@@ -2788,9 +2856,15 @@
         } else if (srcType === 'conference' || w.type === 'proceedings-article') {
           // Try CORE lookup
           const coreMatch = lookupCOREConference(srcName);
-          if (coreMatch && confRank.hasOwnProperty(coreMatch.rank)) {
-            confRank[coreMatch.rank]++;
+          if (coreMatch && coreRank.hasOwnProperty(coreMatch.rank)) {
+            coreRank[coreMatch.rank]++;
           }
+          // Try CCF lookup (safely check if script is loaded)
+          const ccfMatch = typeof lookupCCFConference === 'function' ? lookupCCFConference(srcName) : null;
+          if (ccfMatch && ccfRank.hasOwnProperty(ccfMatch.rank)) {
+            ccfRank[ccfMatch.rank]++;
+          }
+          
           totalConfs++;
         } else {
           totalOther++;
@@ -2829,23 +2903,26 @@
       }
 
       // Render donut charts
-      renderRefCharts(journalQ, confRank, totalJournals, totalConfs, totalOther, refs.length, content);
+      renderRefCharts(journalQ, coreRank, ccfRank, totalJournals, totalConfs, totalOther, refs.length, content);
     }
 
-    function renderRefCharts(journalQ, confRank, totalJournals, totalConfs, totalOther, totalRefs, container) {
-      const jColors = { Q1: '#10b981', Q2: '#f59e0b', Q3: '#f97316', Q4: '#ef4444' };
-      const cColors = { 'A*': '#f59e0b', 'A': '#10b981', 'B': '#3b82f6', 'C': '#6b7280' };
+    function renderRefCharts(journalQ, coreRank, ccfRank, totalJournals, totalConfs, totalOther, totalRefs, container) {
+      const jColors = { Q1: '#2ecc71', Q2: '#f39c12', Q3: '#e67e22', Q4: '#e74c3c' };
+      const coreColors = { 'A*': '#f39c12', 'A': '#2ecc71', 'B': '#3498db', 'C': '#7f8c8d' };
+      const ccfColors = { 'A': '#e74c3c', 'B': '#9b59b6', 'C': '#34495e' };
 
       const jTotal = Object.values(journalQ).reduce((a, b) => a + b, 0);
-      const cTotal = Object.values(confRank).reduce((a, b) => a + b, 0);
+      const coreTotal = Object.values(coreRank).reduce((a, b) => a + b, 0);
+      const ccfTotal = Object.values(ccfRank).reduce((a, b) => a + b, 0);
 
       const jGradient = buildDonutGradient(journalQ, jColors);
-      const cGradient = buildDonutGradient(confRank, cColors);
+      const coreGradient = buildDonutGradient(coreRank, coreColors);
+      const ccfGradient = buildDonutGradient(ccfRank, ccfColors);
 
       container.innerHTML = `
         <div class="refs-dashboard">
           <div class="chart-card">
-            <div class="chart-title">Journal Quartile Distribution</div>
+            <div class="chart-title"><a href="https://scimagojr.com" target="_blank" style="text-decoration:none; color:inherit;">Journal Quartiles 🔗</a></div>
             <div class="donut-chart" style="background: ${jGradient};">
               <div class="donut-inner">
                 <div class="donut-total">${jTotal}</div>
@@ -2862,18 +2939,35 @@
             </div>
           </div>
           <div class="chart-card">
-            <div class="chart-title">Conference Rank Distribution</div>
-            <div class="donut-chart" style="background: ${cGradient};">
+            <div class="chart-title"><a href="http://portal.core.edu.au/conf-ranks/" target="_blank" style="text-decoration:none; color:inherit;">CORE Conference Ranks 🔗</a></div>
+            <div class="donut-chart" style="background: ${coreGradient};">
               <div class="donut-inner">
-                <div class="donut-total">${cTotal}</div>
-                <div class="donut-label">Conferences</div>
+                <div class="donut-total">${coreTotal}</div>
+                <div class="donut-label">CORE Matches</div>
               </div>
             </div>
             <div class="chart-legend">
-              ${Object.entries(confRank).map(([k, v]) => `
+              ${Object.entries(coreRank).map(([k, v]) => `
                 <span class="legend-item">
-                  <span class="legend-color" style="background: ${cColors[k]}"></span>
-                  ${k}: ${v} ${cTotal > 0 ? `(${Math.round(v/cTotal*100)}%)` : ''}
+                  <span class="legend-color" style="background: ${coreColors[k]}"></span>
+                  ${k}: ${v} ${coreTotal > 0 ? `(${Math.round(v/coreTotal*100)}%)` : ''}
+                </span>
+              `).join('')}
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title"><a href="https://www.ccf.org.cn/en/Bulletin/General/" target="_blank" style="text-decoration:none; color:inherit;">CCF Conference Ranks 🔗</a></div>
+            <div class="donut-chart" style="background: ${ccfGradient};">
+              <div class="donut-inner">
+                <div class="donut-total">${ccfTotal}</div>
+                <div class="donut-label">CCF Matches</div>
+              </div>
+            </div>
+            <div class="chart-legend">
+              ${Object.entries(ccfRank).map(([k, v]) => `
+                <span class="legend-item">
+                  <span class="legend-color" style="background: ${ccfColors[k]}"></span>
+                  ${k}: ${v} ${ccfTotal > 0 ? `(${Math.round(v/ccfTotal*100)}%)` : ''}
                 </span>
               `).join('')}
             </div>
