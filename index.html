@@ -1432,7 +1432,7 @@
       right: 0;
       bottom: 0;
       overflow: hidden;
-      opacity: 0.2; /* To let developers see it. Normal uses opacity 0. But selection covers it anyway, wait, just set it to transparent and selection pseudo class colors it. */
+      opacity: 1;
       line-height: 1;
       color: transparent;
       border-radius: 4px;
@@ -1445,7 +1445,7 @@
       transform-origin: 0% 0%;
     }
     .textLayer ::selection {
-      background: rgba(191, 90, 30, 0.3); /* match brand */
+      background: rgba(100, 120, 220, 0.4);
       color: transparent;
     }
     
