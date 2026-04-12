@@ -496,6 +496,18 @@
       text-decoration: underline;
     }
 
+    .meta-link {
+      text-decoration: none !important;
+      cursor: pointer;
+      transition: var(--transition);
+      opacity: 0.8;
+    }
+    .meta-link:hover {
+      opacity: 1;
+      background: rgba(0,0,0,0.06);
+      border-radius: var(--radius-sm);
+    }
+
     .paper-type-badge {
       display: inline-flex;
       align-items: center;
@@ -3121,12 +3133,17 @@
             ${typeLabel === 'Journal' ? '📰' : typeLabel === 'Conference' ? '🎤' : '📦'} ${typeLabel}
           </span>
           <span class="meta-item"><span class="meta-icon">📚</span> ${escapeHtml(sourceName)}</span>
-          ${year ? `<span class="meta-item"><span class="meta-icon">📅</span> ${year}</span>` : ''}
-          <span class="meta-item"><span class="meta-icon">📊</span> ${citedBy.toLocaleString()} citations</span>
           <span class="oa-badge ${oaBadgeClass}">🔓 ${oaStatus.toUpperCase()}</span>
           <span class="collab-badge ${collab.badgeClass}">${collab.icon} ${collab.label}</span>
+          <a href="https://scholar.google.com/scholar?q=${encodeURIComponent(work.title || '')}" target="_blank" class="meta-item meta-link" title="Google Scholar">🎓 Scholar</a>
+          <a href="https://api.semanticscholar.org/graph/v1/paper/DOI:${doi}?fields=title,citationCount" target="_blank" class="meta-item meta-link" title="Semantic Scholar">🧠 S2</a>
+          ${work.id ? `<a href="${work.id}" target="_blank" class="meta-item meta-link" title="OpenAlex">📖 OpenAlex</a>` : ''}
+          <a href="https://excitation.tech/" target="_blank" class="meta-item meta-link" title="Excitation.tech">⚡ Excitation</a>
         </div>
-        <a href="https://doi.org/${doi}" target="_blank" class="paper-doi-link">doi:${doi}</a>
+        <div style="display:flex; align-items:center; gap:12px; margin-top:2px;">
+          <a href="https://doi.org/${doi}" target="_blank" class="paper-doi-link" style="margin:0;">doi:${doi}</a>
+          ${year ? `<span class="meta-item" style="font-size:11px;">📅 ${year}</span>` : ''}
+        </div>
         ${(() => {
           // Prefer paper's own keywords; fall back to OpenAlex topics
           const paperKeywords = (work.keywords || []).slice(0, 6);
@@ -3147,13 +3164,6 @@
           `;
         })()}
       `;
-
-      // Embed quick links grid directly inside paper header
-      const qlDiv = document.createElement('div');
-      qlDiv.id = 'quick-links-grid';
-      qlDiv.className = 'quick-links-grid';
-      qlDiv.style.marginTop = '6px';
-      container.appendChild(qlDiv);
     }
 
     function renderMetrics(work, source, coreRanking) {
@@ -3481,65 +3491,9 @@
     }
 
     function renderQuickLinks(work, source, doi) {
-      const grid = document.getElementById('quick-links-grid');
-      const sourceName = work.primary_location?.source?.display_name || '';
-      const issn = source?.issn_l || work.primary_location?.source?.issn_l || '';
-
-      let links = '';
-
-      // DOI link
-      links += `<a href="https://doi.org/${doi}" target="_blank" class="quick-link">
-        <span class="link-icon">🔗</span> DOI page
-      </a>`;
-
-      // Scimago search
-      if (issn) {
-        links += `<a href="https://www.scimagojr.com/journalsearch.php?q=${issn}&tip=issn" target="_blank" class="quick-link">
-          <span class="link-icon">📊</span> Scimago (ISSN)
-        </a>`;
-      }
-      if (sourceName) {
-        links += `<a href="https://www.scimagojr.com/journalsearch.php?q=${encodeURIComponent(sourceName)}&tip=jou" target="_blank" class="quick-link">
-          <span class="link-icon">📊</span> Scimago (Name)
-        </a>`;
-      }
-
-      // CORE portal
-      links += `<a href="https://portal.core.edu.au/conf-ranks/?search=${encodeURIComponent(sourceName)}&by=all&source=all&sort=atitle&page=1" target="_blank" class="quick-link">
-        <span class="link-icon">🏅</span> CORE Portal
-      </a>`;
-
-      // Google Scholar
-      links += `<a href="https://scholar.google.com/scholar?q=${encodeURIComponent(work.title || '')}" target="_blank" class="quick-link">
-        <span class="link-icon">🎓</span> Google Scholar
-      </a>`;
-
-      // Semantic Scholar
-      links += `<a href="https://api.semanticscholar.org/graph/v1/paper/DOI:${doi}?fields=title,citationCount,influentialCitationCount" target="_blank" class="quick-link">
-        <span class="link-icon">🧠</span> Semantic Scholar API
-      </a>`;
-
-      // OpenAlex
-      if (work.id) {
-        links += `<a href="${work.id}" target="_blank" class="quick-link">
-          <span class="link-icon">📖</span> OpenAlex
-        </a>`;
-      }
-
-      // Excitation.tech
-      links += `<a href="https://excitation.tech/" target="_blank" class="quick-link">
-        <span class="link-icon">⚡</span> Excitation.tech
-      </a>`;
-
-      // PDF if available
+      // PDF link only (other links moved to paper header meta row)
       const pdfUrl = work.primary_location?.pdf_url || work.best_oa_location?.pdf_url;
-      if (pdfUrl) {
-        links += `<a href="${pdfUrl}" target="_blank" class="quick-link">
-          <span class="link-icon">📄</span> PDF
-        </a>`;
-      }
-
-      grid.innerHTML = links;
+      // No separate quick links section needed anymore
     }
 
     // ===================== HISTORY =====================
