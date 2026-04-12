@@ -1814,6 +1814,63 @@
     body.dashboard-mode .quick-links-grid {
       gap: 4px;
     }
+
+    /* Publication Timeline */
+    .pub-timeline-section {
+      display: none;
+      margin-bottom: 6px;
+    }
+    body.dashboard-mode .pub-timeline-section {
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+    }
+    .timeline-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 3px 0;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .timeline-row .tl-icon {
+      width: 16px;
+      text-align: center;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .timeline-row .tl-label {
+      min-width: 80px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .timeline-row .tl-date {
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+    .timeline-duration {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 4px;
+      padding: 3px 8px;
+      background: rgba(46,125,50,0.08);
+      border: 1px solid rgba(46,125,50,0.2);
+      border-radius: var(--radius-sm);
+      font-size: 10px;
+      color: #2e7d32;
+      font-weight: 600;
+    }
+    .timeline-duration.long-review {
+      background: rgba(230,81,0,0.08);
+      border-color: rgba(230,81,0,0.2);
+      color: #e65100;
+    }
     body.dashboard-mode .quick-link {
       padding: 4px 8px;
       font-size: 10px;
@@ -1990,6 +2047,12 @@
           <div class="quick-links-section" id="quick-links-section">
             <div class="section-title">🔗 External Resources</div>
             <div class="quick-links-grid" id="quick-links-grid"></div>
+          </div>
+
+          <!-- Publication Timeline -->
+          <div class="pub-timeline-section v2-section" id="pub-timeline-section">
+            <div class="section-title">📅 Publication Timeline</div>
+            <div id="pub-timeline-content"></div>
           </div>
 
           <!-- Metrics 2x2 -->
@@ -3001,6 +3064,9 @@
       // Quick Links
       renderQuickLinks(work, source, doi);
 
+      // Publication Timeline (async via CrossRef)
+      fetchPublicationTimeline(doi);
+
       resultsSection.classList.add('active');
       window.scrollTo(0, 0);
 
@@ -3317,6 +3383,109 @@
       }
 
       grid.innerHTML = cards;
+    }
+
+    // ===================== PUBLICATION TIMELINE =====================
+    async function fetchPublicationTimeline(doi) {
+      const section = document.getElementById('pub-timeline-section');
+      const content = document.getElementById('pub-timeline-content');
+      
+      try {
+        const crData = await fetchCrossRef(doi);
+        const msg = crData.message || {};
+        
+        // Extract all possible dates from CrossRef
+        const parseDateParts = (obj) => {
+          if (!obj || !obj['date-parts'] || !obj['date-parts'][0]) return null;
+          const parts = obj['date-parts'][0];
+          if (!parts[0]) return null;
+          // date-parts: [[year, month, day]]
+          const y = parts[0];
+          const m = parts[1] || 1;
+          const d = parts[2] || 1;
+          return new Date(y, m - 1, d);
+        };
+        
+        const formatDate = (date) => {
+          if (!date) return null;
+          return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        };
+        
+        const dates = {
+          received: parseDateParts(msg['received']),
+          accepted: parseDateParts(msg['accepted']),
+          publishedOnline: parseDateParts(msg['published-online']),
+          publishedPrint: parseDateParts(msg['published-print']),
+          created: parseDateParts(msg['created']),
+          deposited: parseDateParts(msg['deposited']),
+          issued: parseDateParts(msg['issued']),
+        };
+        
+        // Build timeline rows — only show dates that exist
+        const rows = [];
+        
+        if (dates.received) {
+          rows.push({ icon: '📩', label: 'Received', date: dates.received });
+        }
+        if (dates.accepted) {
+          rows.push({ icon: '✅', label: 'Accepted', date: dates.accepted });
+        }
+        if (dates.publishedOnline) {
+          rows.push({ icon: '🌐', label: 'Online', date: dates.publishedOnline });
+        }
+        if (dates.publishedPrint) {
+          rows.push({ icon: '📄', label: 'Print', date: dates.publishedPrint });
+        }
+        // Fallback: if none of the above, show created/deposited
+        if (rows.length === 0 && dates.created) {
+          rows.push({ icon: '📝', label: 'Registered', date: dates.created });
+        }
+        if (rows.length <= 1 && dates.issued) {
+          rows.push({ icon: '📰', label: 'Issued', date: dates.issued });
+        }
+        
+        if (rows.length === 0) {
+          // No dates available
+          return;
+        }
+        
+        let html = '';
+        for (const row of rows) {
+          html += `
+            <div class="timeline-row">
+              <span class="tl-icon">${row.icon}</span>
+              <span class="tl-label">${row.label}</span>
+              <span class="tl-date">${formatDate(row.date)}</span>
+            </div>`;
+        }
+        
+        // Calculate review duration (received → accepted)
+        if (dates.received && dates.accepted) {
+          const diffMs = dates.accepted - dates.received;
+          const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+          const isLong = diffDays > 180;
+          html += `
+            <div class="timeline-duration ${isLong ? 'long-review' : ''}">
+              ⏱ Review: ${diffDays} days${diffDays === 0 ? ' (same day)' : ''}${isLong ? ' (long)' : diffDays <= 30 ? ' (fast)' : ''}
+            </div>`;
+        }
+        // Fallback: received → published-online
+        else if (dates.received && dates.publishedOnline) {
+          const diffMs = dates.publishedOnline - dates.received;
+          const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+          html += `
+            <div class="timeline-duration">
+              ⏱ Submission→Online: ${diffDays} days
+            </div>`;
+        }
+        
+        content.innerHTML = html;
+        section.style.display = 'block';
+        
+      } catch (e) {
+        console.warn('Could not fetch publication timeline:', e.message);
+        // Silently fail — timeline is optional
+      }
     }
 
     function renderQuickLinks(work, source, doi) {
