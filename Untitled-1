@@ -1,0 +1,362 @@
+[Skip to main content](https://docs.openalex.org/api-entities/sources/source-object#content-area)
+[OpenAlex Developers home page](https://docs.openalex.org/)
+
+##### Overview
+- [API Overview](https://docs.openalex.org/api-reference/introduction)
+- [Authentication & Pricing](https://docs.openalex.org/api-reference/authentication)
+- [Error Handling](https://docs.openalex.org/api-reference/errors)
+[API Overview](https://docs.openalex.org/api-reference/introduction)
+[Authentication & Pricing](https://docs.openalex.org/api-reference/authentication)
+[Error Handling](https://docs.openalex.org/api-reference/errors)
+
+##### Utilities
+- [GETAutocomplete search](https://docs.openalex.org/api-reference/autocomplete/autocomplete-search)
+- [GETCheck rate limit status](https://docs.openalex.org/api-reference/rate-limits/check-rate-limit-status)
+- [GETList changefile dates](https://docs.openalex.org/api-reference/changefiles/list-changefile-dates)
+- [GETGet changefile for a date](https://docs.openalex.org/api-reference/changefiles/get-changefile-for-a-date)
+[GETAutocomplete search](https://docs.openalex.org/api-reference/autocomplete/autocomplete-search)
+[GETCheck rate limit status](https://docs.openalex.org/api-reference/rate-limits/check-rate-limit-status)
+[GETList changefile dates](https://docs.openalex.org/api-reference/changefiles/list-changefile-dates)
+[GETGet changefile for a date](https://docs.openalex.org/api-reference/changefiles/get-changefile-for-a-date)
+
+##### Entities
+- Works
+- Authors
+- Sources[Sources Overview](https://docs.openalex.org/api-reference/sources)[GETGet a single source](https://docs.openalex.org/api-reference/sources/get-a-single-source)[GETList sources](https://docs.openalex.org/api-reference/sources/list-sources)
+- [Sources Overview](https://docs.openalex.org/api-reference/sources)
+- [GETGet a single source](https://docs.openalex.org/api-reference/sources/get-a-single-source)
+- [GETList sources](https://docs.openalex.org/api-reference/sources/list-sources)
+- Institutions
+- Topics
+- Domains
+- Fields
+- Subfields
+- SDGs
+- Countries
+- Continents
+- Languages
+- Keywords
+- Publishers
+- Funders
+- Awards
+- Concepts (deprecated)
+- Work Types
+- Source Types
+- Institution Types
+- Licenses
+- [Sources Overview](https://docs.openalex.org/api-reference/sources)
+- [GETGet a single source](https://docs.openalex.org/api-reference/sources/get-a-single-source)
+- [GETList sources](https://docs.openalex.org/api-reference/sources/list-sources)
+[Sources Overview](https://docs.openalex.org/api-reference/sources)
+[GETGet a single source](https://docs.openalex.org/api-reference/sources/get-a-single-source)
+[GETList sources](https://docs.openalex.org/api-reference/sources/list-sources)
+[OpenAlex Developers home page](https://docs.openalex.org/)
+[Guides](https://docs.openalex.org/)
+[API Reference](https://docs.openalex.org/api-reference/introduction)
+[Data Downloads](https://docs.openalex.org/download/overview)
+[Guides](https://docs.openalex.org/)
+[API Reference](https://docs.openalex.org/api-reference/introduction)
+[Data Downloads](https://docs.openalex.org/download/overview)
+
+# Sources Overview
+
+Schema reference for Sources entities
+
+## [​](https://docs.openalex.org/api-entities/sources/source-object#filter-sort-and-group_by-fields)Filter, sort, and group_by fields
+
+[​](https://docs.openalex.org/api-entities/sources/source-object#filter-sort-and-group_by-fields)
+[Filtering](https://docs.openalex.org/guides/filtering)
+[Sorting](https://docs.openalex.org/guides/sort)
+[Grouping](https://docs.openalex.org/guides/grouping)
+
+```
+.search
+```
+
+[search parameter](https://docs.openalex.org/guides/searching)
+
+```
+search
+```
+
+### [​](https://docs.openalex.org/api-entities/sources/source-object#top-level)Top-level
+[​](https://docs.openalex.org/api-entities/sources/source-object#top-level)
+
+```
+apc_usd
+```
+
+
+```
+cited_by_count
+```
+
+
+```
+continent
+```
+
+
+```
+country_code
+```
+
+
+```
+display_name
+```
+
+
+```
+first_publication_year
+```
+
+
+```
+from_created_date
+```
+
+
+```
+has_issn
+```
+
+
+```
+host_organization
+```
+
+
+```
+host_organization_lineage
+```
+
+
+```
+is_core
+```
+
+
+```
+is_global_south
+```
+
+
+```
+is_high_oa_rate
+```
+
+
+```
+is_high_oa_rate_since_year
+```
+
+
+```
+is_in_doaj
+```
+
+
+```
+is_in_doaj_since_year
+```
+
+
+```
+is_in_jstage
+```
+
+
+```
+is_in_jstage_since_year
+```
+
+
+```
+is_oa
+```
+
+
+```
+is_ojs
+```
+
+
+```
+issn
+```
+
+
+```
+issn_l
+```
+
+
+```
+last_publication_year
+```
+
+
+```
+oa_flip_year
+```
+
+
+```
+openalex
+```
+
+
+```
+openalex_id
+```
+
+
+```
+to_created_date
+```
+
+
+```
+to_updated_date
+```
+
+
+```
+type
+```
+
+
+```
+works_count
+```
+
+### [​](https://docs.openalex.org/api-entities/sources/source-object#apc-prices)Apc Prices
+[​](https://docs.openalex.org/api-entities/sources/source-object#apc-prices)
+
+```
+apc_prices.currency
+```
+
+
+```
+apc_prices.price
+```
+
+### [​](https://docs.openalex.org/api-entities/sources/source-object#concept)Concept
+[​](https://docs.openalex.org/api-entities/sources/source-object#concept)
+
+```
+concept.id
+```
+
+### [​](https://docs.openalex.org/api-entities/sources/source-object#concepts)Concepts
+[​](https://docs.openalex.org/api-entities/sources/source-object#concepts)
+
+```
+concepts.id
+```
+
+### [​](https://docs.openalex.org/api-entities/sources/source-object#default)Default
+[​](https://docs.openalex.org/api-entities/sources/source-object#default)
+
+```
+default.search
+```
+
+### [​](https://docs.openalex.org/api-entities/sources/source-object#display-name)Display Name
+[​](https://docs.openalex.org/api-entities/sources/source-object#display-name)
+
+```
+display_name.search
+```
+
+### [​](https://docs.openalex.org/api-entities/sources/source-object#host-organization)Host Organization
+[​](https://docs.openalex.org/api-entities/sources/source-object#host-organization)
+
+```
+host_organization.id
+```
+
+### [​](https://docs.openalex.org/api-entities/sources/source-object#ids)Ids
+[​](https://docs.openalex.org/api-entities/sources/source-object#ids)
+
+```
+ids.mag
+```
+
+
+```
+ids.openalex
+```
+
+### [​](https://docs.openalex.org/api-entities/sources/source-object#summary-stats)Summary Stats
+[​](https://docs.openalex.org/api-entities/sources/source-object#summary-stats)
+
+```
+summary_stats.2yr_mean_citedness
+```
+
+
+```
+summary_stats.h_index
+```
+
+
+```
+summary_stats.i10_index
+```
+
+### [​](https://docs.openalex.org/api-entities/sources/source-object#topic-share)Topic Share
+[​](https://docs.openalex.org/api-entities/sources/source-object#topic-share)
+
+```
+topic_share.id
+```
+
+### [​](https://docs.openalex.org/api-entities/sources/source-object#topics)Topics
+[​](https://docs.openalex.org/api-entities/sources/source-object#topics)
+
+```
+topics.id
+```
+
+### [​](https://docs.openalex.org/api-entities/sources/source-object#x-concepts)X Concepts
+
+[​](https://docs.openalex.org/api-entities/sources/source-object#x-concepts)
+
+```
+x_concepts.id
+```
+
+[Previous](https://docs.openalex.org/api-reference/authors/list-authors)
+[Get a single sourceRetrieve a single source by OpenAlex ID or ISSN.Next](https://docs.openalex.org/api-reference/sources/get-a-single-source)
+[x](https://x.com/openalex_org)
+[github](https://github.com/ourresearch)
+[Powered byThis documentation is built and hosted on Mintlify, a developer documentation platform](https://www.mintlify.com?utm_campaign=poweredBy&utm_medium=referral&utm_source=openalex)
+- [Filter, sort, and group_by fields](https://docs.openalex.org/api-entities/sources/source-object#filter-sort-and-group_by-fields)
+- [Top-level](https://docs.openalex.org/api-entities/sources/source-object#top-level)
+- [Apc Prices](https://docs.openalex.org/api-entities/sources/source-object#apc-prices)
+- [Concept](https://docs.openalex.org/api-entities/sources/source-object#concept)
+- [Concepts](https://docs.openalex.org/api-entities/sources/source-object#concepts)
+- [Default](https://docs.openalex.org/api-entities/sources/source-object#default)
+- [Display Name](https://docs.openalex.org/api-entities/sources/source-object#display-name)
+- [Host Organization](https://docs.openalex.org/api-entities/sources/source-object#host-organization)
+- [Ids](https://docs.openalex.org/api-entities/sources/source-object#ids)
+- [Summary Stats](https://docs.openalex.org/api-entities/sources/source-object#summary-stats)
+- [Topic Share](https://docs.openalex.org/api-entities/sources/source-object#topic-share)
+- [Topics](https://docs.openalex.org/api-entities/sources/source-object#topics)
+- [X Concepts](https://docs.openalex.org/api-entities/sources/source-object#x-concepts)
+[Filter, sort, and group_by fields](https://docs.openalex.org/api-entities/sources/source-object#filter-sort-and-group_by-fields)
+[Top-level](https://docs.openalex.org/api-entities/sources/source-object#top-level)
+[Apc Prices](https://docs.openalex.org/api-entities/sources/source-object#apc-prices)
+[Concept](https://docs.openalex.org/api-entities/sources/source-object#concept)
+[Concepts](https://docs.openalex.org/api-entities/sources/source-object#concepts)
+[Default](https://docs.openalex.org/api-entities/sources/source-object#default)
+[Display Name](https://docs.openalex.org/api-entities/sources/source-object#display-name)
+[Host Organization](https://docs.openalex.org/api-entities/sources/source-object#host-organization)
+[Ids](https://docs.openalex.org/api-entities/sources/source-object#ids)
+[Summary Stats](https://docs.openalex.org/api-entities/sources/source-object#summary-stats)
+[Topic Share](https://docs.openalex.org/api-entities/sources/source-object#topic-share)
+[Topics](https://docs.openalex.org/api-entities/sources/source-object#topics)
+[X Concepts](https://docs.openalex.org/api-entities/sources/source-object#x-concepts)

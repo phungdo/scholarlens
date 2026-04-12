@@ -2017,16 +2017,16 @@
     <!-- INPUT SECTION -->
     <section class="input-section" id="input-section">
       <div class="input-tabs">
-        <button class="input-tab active" data-tab="doi-tab" id="doi-tab-btn" onclick="switchTab('doi-tab')">
+        <button class="input-tab" data-tab="doi-tab" id="doi-tab-btn" onclick="switchTab('doi-tab')">
           🔗 DOI Lookup
         </button>
-        <button class="input-tab" data-tab="pdf-tab" id="pdf-tab-btn" onclick="switchTab('pdf-tab')">
+        <button class="input-tab active" data-tab="pdf-tab" id="pdf-tab-btn" onclick="switchTab('pdf-tab')">
           📄 Upload PDF
         </button>
       </div>
 
       <!-- DOI Tab -->
-      <div class="tab-content active" id="doi-tab">
+      <div class="tab-content" id="doi-tab">
         <div class="doi-input-group">
           <div class="doi-input-wrapper">
             <span class="input-icon">🔗</span>
@@ -2038,6 +2038,9 @@
             <span>🔍</span> Lookup
           </button>
         </div>
+        <p style="font-size:13px;color:var(--text-muted);margin:-4px 0 10px;padding-left:2px;">
+          A DOI is the paper's unique ID — looks like <code style="font-family:'JetBrains Mono',monospace;font-size:12px;">10.1234/...</code> and is printed on the first page of most papers.
+        </p>
         <div class="quick-examples">
           <span class="quick-examples-label">Try:</span>
           <button class="example-chip" onclick="fillDOI('10.1371/journal.pone.0313495')">PLoS ONE</button>
@@ -2049,7 +2052,7 @@
       </div>
 
       <!-- PDF Tab -->
-      <div class="tab-content" id="pdf-tab">
+      <div class="tab-content active" id="pdf-tab">
         <div class="drop-zone" id="drop-zone" 
              ondragover="handleDragOver(event)" 
              ondragleave="handleDragLeave(event)" 
@@ -2853,13 +2856,12 @@
           // Clean up the DOI (remove trailing punctuation)
           let doi = matches[0].replace(/[.,;:)\]]+$/, '');
           document.getElementById('doi-input').value = doi;
-          switchTab('doi-tab');
           await performLookup(doi);
           // Load the uploaded PDF into the viewer
           loadPdfIntoViewer(pdfViewerArrayBuffer.slice(0), file.name);
         } else {
           hideLoading();
-          showError('Could not find a DOI in this PDF. Try pasting the DOI manually.');
+          showError('Could not find a DOI in this PDF. DOIs look like 10.1234/... and are printed on the first page of most papers. Try copying it from the paper and pasting it in the DOI Lookup tab.');
         }
       } catch (err) {
         hideLoading();
@@ -3213,14 +3215,14 @@
       let pills = '';
 
       // Citations
-      pills += `<div class="stat-pill">
+      pills += `<div class="stat-pill" title="How many other papers have cited this work">
         <span class="stat-val">${citedBy.toLocaleString()}</span>
         <span class="stat-key">Citations</span>
       </div>`;
 
       // FWCI
       if (fwci != null) {
-        pills += `<div class="stat-pill">
+        pills += `<div class="stat-pill" title="Field-Weighted Citation Impact — how cited this paper is compared to the average in its field. Above 1.0 means above average.">
           <span class="stat-val">${fwci.toFixed(2)}</span>
           <span class="stat-key">FWCI</span>
         </div>`;
@@ -3230,7 +3232,7 @@
       if (percentile) {
         const pctVal = (percentile.value * 100).toFixed(1);
         const topBadge = percentile.is_in_top_1_percent ? ' 🥇' : percentile.is_in_top_10_percent ? ' 🏆' : '';
-        pills += `<div class="stat-pill">
+        pills += `<div class="stat-pill" title="Citation percentile within its field — e.g. 95% means this paper is cited more than 95% of similar papers">
           <span class="stat-val">${pctVal}%${topBadge}</span>
           <span class="stat-key">Percentile</span>
         </div>`;
@@ -3247,19 +3249,19 @@
           : `https://www.scimagojr.com/journalsearch.php?q=${encodeURIComponent(source.display_name || '')}&tip=jou`;
 
         if (quartile) {
-          pills += `<a href="${scimagoUrl}" target="_blank" class="stat-pill stat-pill-link" title="Verify on Scimago">
+          pills += `<a href="${scimagoUrl}" target="_blank" class="stat-pill stat-pill-link" title="Estimated Scimago Quartile — Q1 is top 25% of journals in its field, Q4 is the lowest. Click to verify on Scimago.">
             <span class="stat-val quartile-color-${quartile.key}">${quartile.label}</span>
             <span class="stat-key">Quartile</span>
           </a>`;
         }
         if (impactProxy != null) {
-          pills += `<div class="stat-pill">
+          pills += `<div class="stat-pill" title="Impact Factor proxy — average citations per paper published in this journal over the last 2 years. Higher = more influential journal.">
             <span class="stat-val">${impactProxy.toFixed(2)}</span>
             <span class="stat-key">IF proxy</span>
           </div>`;
         }
         if (hIndex != null) {
-          pills += `<div class="stat-pill">
+          pills += `<div class="stat-pill" title="Journal h-index — the journal has published at least h papers each cited at least h times. Higher = more prestigious journal.">
             <span class="stat-val">${hIndex}</span>
             <span class="stat-key">h-index</span>
           </div>`;
@@ -3271,7 +3273,7 @@
       const isConfType = sourceType === 'conference' || work.type === 'proceedings-article' || work.type === 'proceedings';
       if (coreRanking) {
         const coreUrl = `https://portal.core.edu.au/conf-ranks/?search=${encodeURIComponent(work.primary_location?.source?.display_name || '')}&by=all&source=all&sort=atitle&page=1`;
-        pills += `<a href="${coreUrl}" target="_blank" class="stat-pill stat-pill-link" title="${escapeHtml(coreRanking.title)}">
+        pills += `<a href="${coreUrl}" target="_blank" class="stat-pill stat-pill-link" title="CORE Conference Ranking for ${escapeHtml(coreRanking.title)} — A* is the top tier, then A, B, C. Click to verify on CORE portal.">
           <span class="stat-val stat-core-${coreRanking.rank === 'A*' ? 'astar' : coreRanking.rank.toLowerCase()}">${escapeHtml(coreRanking.rank)}</span>
           <span class="stat-key">CORE</span>
         </a>`;
