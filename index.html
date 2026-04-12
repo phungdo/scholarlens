@@ -3454,7 +3454,58 @@
     async function analyzeReferences(work) {
       const section = document.getElementById('refs-section');
       const content = document.getElementById('refs-content');
-      const refs = work.referenced_works || [];
+      let refs = work.referenced_works || [];
+      const doi = work.doi ? work.doi.replace('https://doi.org/', '') : null;
+      let fallbackSource = null;
+
+      // If OpenAlex has too few references, try fallback sources
+      if (refs.length < 3 && doi) {
+        section.style.display = 'block';
+        content.innerHTML = `
+          <div class="refs-progress-wrap">
+            <div class="refs-progress-bar"><div class="refs-progress-fill" id="refs-progress-fill" style="width:10%"></div></div>
+            <div class="refs-status" id="refs-status">OpenAlex returned ${refs.length} reference(s). Trying fallback sources...</div>
+          </div>
+        `;
+
+        // Fallback 1: CrossRef
+        try {
+          const crData = await fetchCrossRef(doi);
+          const crRefs = crData?.message?.reference || [];
+          if (crRefs.length > refs.length) {
+            // CrossRef references contain DOIs — convert to OpenAlex-queryable DOIs
+            const crDois = crRefs
+              .map(r => r.DOI || r.doi)
+              .filter(Boolean);
+            if (crDois.length > 0) {
+              refs = crDois.map(d => `doi:${d}`); // marker for DOI-based lookup
+              fallbackSource = 'CrossRef';
+            }
+          }
+        } catch (e) {
+          console.warn('CrossRef fallback failed:', e.message);
+        }
+
+        // Fallback 2: Semantic Scholar (if CrossRef also insufficient)
+        if (refs.length < 3) {
+          try {
+            const ssUrl = `https://api.semanticscholar.org/graph/v1/paper/DOI:${doi}/references?fields=externalIds&limit=500`;
+            const ssResp = await fetch(ssUrl);
+            if (ssResp.ok) {
+              const ssData = await ssResp.json();
+              const ssRefs = (ssData.data || [])
+                .map(r => r.citedPaper?.externalIds?.DOI)
+                .filter(Boolean);
+              if (ssRefs.length > refs.length) {
+                refs = ssRefs.map(d => `doi:${d}`);
+                fallbackSource = 'Semantic Scholar';
+              }
+            }
+          } catch (e) {
+            console.warn('Semantic Scholar fallback failed:', e.message);
+          }
+        }
+      }
 
       if (refs.length === 0) {
         section.style.display = 'none';
@@ -3464,34 +3515,55 @@
       section.style.display = 'block';
 
       // Show progress
+      const sourceLabel = fallbackSource ? ` (via ${fallbackSource})` : '';
       content.innerHTML = `
         <div class="refs-progress-wrap">
           <div class="refs-progress-bar"><div class="refs-progress-fill" id="refs-progress-fill"></div></div>
-          <div class="refs-status" id="refs-status">Analyzing ${refs.length} references...</div>
+          <div class="refs-status" id="refs-status">Analyzing ${refs.length} references${sourceLabel}...</div>
         </div>
       `;
 
-      // Extract OpenAlex IDs
-      const oaIds = refs.map(r => r.replace('https://openalex.org/', ''));
+      // Determine if refs are OpenAlex IDs or DOI-based (from fallback)
+      const isDOIbased = refs.length > 0 && String(refs[0]).startsWith('doi:');
 
-      // Batch fetch in groups of 50 (OpenAlex limit)
+      // Batch fetch in groups of 50
       const batchSize = 50;
       const allWorks = [];
       const progressFill = document.getElementById('refs-progress-fill');
       const statusEl = document.getElementById('refs-status');
 
-      for (let i = 0; i < oaIds.length; i += batchSize) {
-        const batch = oaIds.slice(i, i + batchSize);
-        const filter = batch.join('|');
-        try {
-          const data = await fetchOpenAlex(`/works?filter=openalex:${filter}&select=id,primary_location,type&per_page=50`);
-          allWorks.push(...(data.results || []));
-        } catch (e) {
-          console.warn('Batch fetch error:', e);
+      if (isDOIbased) {
+        // DOI-based: query OpenAlex by DOI filter
+        const dois = refs.map(r => r.replace('doi:', ''));
+        for (let i = 0; i < dois.length; i += batchSize) {
+          const batch = dois.slice(i, i + batchSize);
+          const filter = batch.map(d => `https://doi.org/${d}`).join('|');
+          try {
+            const data = await fetchOpenAlex(`/works?filter=doi:${encodeURIComponent(filter)}&select=id,primary_location,type&per_page=50`);
+            allWorks.push(...(data.results || []));
+          } catch (e) {
+            console.warn('DOI batch fetch error:', e);
+          }
+          const pct = Math.min(100, Math.round(((i + batchSize) / dois.length) * 100));
+          if (progressFill) progressFill.style.width = pct + '%';
+          if (statusEl) statusEl.textContent = `Fetched ${Math.min(i + batchSize, dois.length)} / ${dois.length} references${sourceLabel}...`;
         }
-        const pct = Math.min(100, Math.round(((i + batchSize) / oaIds.length) * 100));
-        if (progressFill) progressFill.style.width = pct + '%';
-        if (statusEl) statusEl.textContent = `Fetched ${Math.min(i + batchSize, oaIds.length)} / ${oaIds.length} references...`;
+      } else {
+        // OpenAlex ID-based (original flow)
+        const oaIds = refs.map(r => r.replace('https://openalex.org/', ''));
+        for (let i = 0; i < oaIds.length; i += batchSize) {
+          const batch = oaIds.slice(i, i + batchSize);
+          const filter = batch.join('|');
+          try {
+            const data = await fetchOpenAlex(`/works?filter=openalex:${filter}&select=id,primary_location,type&per_page=50`);
+            allWorks.push(...(data.results || []));
+          } catch (e) {
+            console.warn('Batch fetch error:', e);
+          }
+          const pct = Math.min(100, Math.round(((i + batchSize) / oaIds.length) * 100));
+          if (progressFill) progressFill.style.width = pct + '%';
+          if (statusEl) statusEl.textContent = `Fetched ${Math.min(i + batchSize, oaIds.length)} / ${oaIds.length} references...`;
+        }
       }
 
       // Classify references
