@@ -1021,6 +1021,171 @@
       gap: 8px;
       margin-top: 12px;
     }
+
+    /* ===================== V2: COLLABORATION BADGE ===================== */
+    .collab-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    .collab-academic { background: rgba(167, 139, 250, 0.15); color: #a78bfa; border: 1px solid rgba(167, 139, 250, 0.3); }
+    .collab-industry { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .collab-mixed { background: rgba(244, 114, 182, 0.15); color: #f472b6; border: 1px solid rgba(244, 114, 182, 0.3); }
+    .collab-gov { background: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); }
+    .collab-hospital { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    /* ===================== V2: QUARTILE BADGE ===================== */
+    .quartile-badge-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .quartile-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      font-size: 20px;
+      font-weight: 900;
+      color: white;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      flex-shrink: 0;
+      padding: 0 6px;
+    }
+    .q-q1 { background: linear-gradient(135deg, #10b981, #059669); }
+    .q-q2 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .q-q3 { background: linear-gradient(135deg, #f97316, #ea580c); }
+    .q-q4 { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .quartile-info { flex: 1; }
+    .quartile-label { font-size: 12px; color: var(--text-muted); }
+    .quartile-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .scimago-link { font-size: 12px; color: var(--accent-indigo-light); text-decoration: none; }
+    .scimago-link:hover { text-decoration: underline; }
+
+    /* ===================== V2: FUNDING CARD ===================== */
+    .v2-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      padding: 24px 32px;
+      margin-bottom: 24px;
+      backdrop-filter: blur(20px);
+    }
+    .funding-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+    .funding-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      transition: var(--transition);
+    }
+    .funding-item:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(99, 102, 241, 0.3); }
+    .funder-icon {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--gradient-hero);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 15px; color: white;
+      flex-shrink: 0;
+    }
+    .funder-info { flex: 1; }
+    .funder-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .funder-grant { font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+    .funding-empty { color: var(--text-muted); font-size: 13px; padding: 12px 0; }
+
+    /* ===================== V2: REFERENCE ANALYSIS ===================== */
+    .refs-dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    @media (max-width: 768px) { .refs-dashboard { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      text-align: center;
+    }
+    .chart-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .donut-chart {
+      width: 150px; height: 150px;
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      position: relative;
+      background: #1f2937;
+    }
+    .donut-inner {
+      position: absolute;
+      top: 22px; left: 22px; right: 22px; bottom: 22px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 50%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .donut-total { font-size: 24px; font-weight: 800; color: white; line-height: 1; }
+    .donut-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-top: 3px; letter-spacing: 0.5px; }
+    .chart-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; font-size: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; color: var(--text-secondary); }
+    .legend-color { width: 10px; height: 10px; border-radius: 2px; }
+    .refs-progress-wrap { margin-top: 16px; }
+    .refs-progress-bar {
+      height: 4px;
+      background: #1f2937;
+      border-radius: 2px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .refs-progress-fill {
+      height: 100%;
+      background: var(--gradient-hero);
+      width: 0%;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    .refs-status { font-size: 12px; color: var(--text-muted); text-align: center; }
+    .refs-summary-table {
+      width: 100%;
+      margin-top: 16px;
+      border-collapse: collapse;
+    }
+    .refs-summary-table th,
+    .refs-summary-table td {
+      padding: 6px 10px;
+      text-align: left;
+      font-size: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .refs-summary-table th {
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .refs-summary-table td {
+      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+    }
   </style>
 </head>
 <body>
@@ -1111,6 +1276,18 @@
 
       <!-- Metrics Grid -->
       <div class="metrics-grid" id="metrics-grid"></div>
+
+      <!-- V2: Funding Info -->
+      <div class="v2-section" id="funding-section" style="display: none;">
+        <div class="section-title">💰 Funding & Grants</div>
+        <div id="funding-content"></div>
+      </div>
+
+      <!-- V2: Reference Portfolio Analysis -->
+      <div class="v2-section" id="refs-section" style="display: none;">
+        <div class="section-title">📚 Reference Portfolio Analysis</div>
+        <div id="refs-content"></div>
+      </div>
 
       <!-- Authors -->
       <div class="authors-section" id="authors-section">
@@ -1402,11 +1579,17 @@
     function renderResults(work, source, authors, coreRanking, doi) {
       const resultsSection = document.getElementById('results-section');
 
-      // Paper Header
+      // Paper Header (with V2 collaboration badge)
       renderPaperHeader(work, doi);
 
-      // Metrics
+      // Metrics (with V2 quartile badge)
       renderMetrics(work, source, coreRanking);
+
+      // V2: Funding Info
+      renderFundingInfo(work);
+
+      // V2: Reference Portfolio Analysis (async — runs in background)
+      analyzeReferences(work);
 
       // Authors
       renderAuthors(authors);
@@ -1446,6 +1629,9 @@
         'hybrid': 'oa-gold',
       }[oaStatus] || 'oa-closed';
 
+      // V2: Detect collaboration type
+      const collab = detectCollaborationType(work);
+
       container.innerHTML = `
         <h1 class="paper-title-text" id="paper-title">${escapeHtml(work.title || work.display_name || 'No title')}</h1>
         <div class="paper-meta">
@@ -1456,6 +1642,7 @@
           ${year ? `<span class="meta-item"><span class="meta-icon">📅</span> ${year}</span>` : ''}
           <span class="meta-item"><span class="meta-icon">📊</span> ${citedBy.toLocaleString()} citations</span>
           <span class="oa-badge ${oaBadgeClass}">🔓 ${oaStatus.toUpperCase()}</span>
+          <span class="collab-badge ${collab.badgeClass}">${collab.icon} ${collab.label}</span>
         </div>
         <a href="https://doi.org/${doi}" target="_blank" class="paper-doi-link">doi:${doi}</a>
         ${work.primary_topic ? `
@@ -1506,7 +1693,7 @@
         </div>
       `;
 
-      // Journal/Source Metrics Card
+      // Journal/Source Metrics Card (V2: with Quartile Badge)
       if (source) {
         const hIndex = source.summary_stats?.h_index;
         const impactProxy = source.summary_stats?.['2yr_mean_citedness'];
@@ -1514,12 +1701,29 @@
         const worksCount = source.works_count;
         const citedByCount = source.cited_by_count;
 
+        // V2: Estimate Scimago-style quartile
+        const quartile = estimateQuartile(impactProxy);
+        const issn = source.issn_l || (source.issn && source.issn[0]) || '';
+        const scimagoUrl = issn
+          ? `https://www.scimagojr.com/journalsearch.php?q=${issn}&tip=issn`
+          : `https://www.scimagojr.com/journalsearch.php?q=${encodeURIComponent(source.display_name || '')}&tip=jou`;
+
         cards += `
           <div class="metric-card">
             <div class="metric-card-header">
               <span class="metric-card-title">Journal / Source Metrics</span>
               <span class="metric-card-icon">📰</span>
             </div>
+            ${quartile ? `
+              <div class="quartile-badge-wrap">
+                <div class="quartile-badge q-${quartile.key}">${quartile.label}</div>
+                <div class="quartile-info">
+                  <div class="quartile-name">Estimated ${quartile.label} Journal</div>
+                  <div class="quartile-label">Based on IF proxy: ${impactProxy?.toFixed(2) || '—'}</div>
+                  <a href="${scimagoUrl}" target="_blank" class="scimago-link">🔍 Verify on Scimago →</a>
+                </div>
+              </div>
+            ` : ''}
             ${hIndex != null ? `
               <div class="metric-value gradient-text">${hIndex.toLocaleString()}</div>
               <div class="metric-label">h-index of ${escapeHtml(source.display_name || 'source')}</div>
@@ -1810,6 +2014,277 @@
       if (seconds < 3600) return `${Math.floor(seconds/60)}m ago`;
       if (seconds < 86400) return `${Math.floor(seconds/3600)}h ago`;
       return `${Math.floor(seconds/86400)}d ago`;
+    }
+
+    // ===================== V2: QUARTILE ESTIMATION =====================
+    function estimateQuartile(impactProxy) {
+      if (impactProxy == null) return null;
+      if (impactProxy >= 3.0) return { key: 'q1', label: 'Q1', color: '#10b981' };
+      if (impactProxy >= 1.5) return { key: 'q2', label: 'Q2', color: '#f59e0b' };
+      if (impactProxy >= 0.5) return { key: 'q3', label: 'Q3', color: '#f97316' };
+      return { key: 'q4', label: 'Q4', color: '#ef4444' };
+    }
+
+    // ===================== V2: COLLABORATION TYPE =====================
+    function detectCollaborationType(work) {
+      const authorships = work.authorships || [];
+      const types = new Set();
+      for (const a of authorships) {
+        for (const inst of (a.institutions || [])) {
+          if (inst.type) types.add(inst.type.toLowerCase());
+        }
+      }
+
+      if (types.has('company') && types.has('education')) {
+        return { label: 'Industry-Academia', icon: '🤝', badgeClass: 'collab-mixed' };
+      }
+      if (types.has('company') && !types.has('education')) {
+        return { label: 'Industry', icon: '🏢', badgeClass: 'collab-industry' };
+      }
+      if (types.has('government')) {
+        return { label: 'Gov Collaboration', icon: '🏛️', badgeClass: 'collab-gov' };
+      }
+      if (types.has('healthcare')) {
+        return { label: 'Clinical', icon: '🏥', badgeClass: 'collab-hospital' };
+      }
+      if (types.has('education')) {
+        return { label: 'Academic', icon: '🎓', badgeClass: 'collab-academic' };
+      }
+      return { label: 'Unknown', icon: '📄', badgeClass: 'collab-academic' };
+    }
+
+    // ===================== V2: FUNDING INFO =====================
+    function renderFundingInfo(work) {
+      const section = document.getElementById('funding-section');
+      const content = document.getElementById('funding-content');
+      const funders = work.funders || [];
+      const grants = work.grants || [];
+
+      if (funders.length === 0 && grants.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = 'block';
+
+      // Merge funder info with grant IDs
+      const funderMap = new Map();
+      for (const f of funders) {
+        funderMap.set(f.display_name, { name: f.display_name, ror: f.ror, grants: [] });
+      }
+      for (const g of grants) {
+        const key = g.funder_display_name || g.funder;
+        if (funderMap.has(key)) {
+          funderMap.get(key).grants.push(g.award_id);
+        } else {
+          funderMap.set(key, { name: key, ror: null, grants: g.award_id ? [g.award_id] : [] });
+        }
+      }
+
+      let html = '<div class="funding-list">';
+      for (const [, funder] of funderMap) {
+        const initial = (funder.name || '?').charAt(0).toUpperCase();
+        const grantText = funder.grants.length > 0
+          ? `Grant: ${funder.grants.join(', ')}`
+          : '';
+        const rorLink = funder.ror
+          ? `<a href="${funder.ror}" target="_blank" style="color: var(--accent-indigo-light); font-size: 12px; text-decoration: none; margin-left: 8px;">🔗 ROR</a>`
+          : '';
+
+        html += `
+          <div class="funding-item">
+            <div class="funder-icon">${initial}</div>
+            <div class="funder-info">
+              <div class="funder-name">${escapeHtml(funder.name)}${rorLink}</div>
+              ${grantText ? `<div class="funder-grant">${escapeHtml(grantText)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    // ===================== V2: REFERENCE PORTFOLIO ANALYSIS =====================
+    async function analyzeReferences(work) {
+      const section = document.getElementById('refs-section');
+      const content = document.getElementById('refs-content');
+      const refs = work.referenced_works || [];
+
+      if (refs.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = 'block';
+
+      // Show progress
+      content.innerHTML = `
+        <div class="refs-progress-wrap">
+          <div class="refs-progress-bar"><div class="refs-progress-fill" id="refs-progress-fill"></div></div>
+          <div class="refs-status" id="refs-status">Analyzing ${refs.length} references...</div>
+        </div>
+      `;
+
+      // Extract OpenAlex IDs
+      const oaIds = refs.map(r => r.replace('https://openalex.org/', ''));
+
+      // Batch fetch in groups of 50 (OpenAlex limit)
+      const batchSize = 50;
+      const allWorks = [];
+      const progressFill = document.getElementById('refs-progress-fill');
+      const statusEl = document.getElementById('refs-status');
+
+      for (let i = 0; i < oaIds.length; i += batchSize) {
+        const batch = oaIds.slice(i, i + batchSize);
+        const filter = batch.join('|');
+        try {
+          const data = await fetchOpenAlex(`/works?filter=openalex:${filter}&select=id,primary_location,type&per_page=50`);
+          allWorks.push(...(data.results || []));
+        } catch (e) {
+          console.warn('Batch fetch error:', e);
+        }
+        const pct = Math.min(100, Math.round(((i + batchSize) / oaIds.length) * 100));
+        if (progressFill) progressFill.style.width = pct + '%';
+        if (statusEl) statusEl.textContent = `Fetched ${Math.min(i + batchSize, oaIds.length)} / ${oaIds.length} references...`;
+      }
+
+      // Classify references
+      const journalQ = { Q1: 0, Q2: 0, Q3: 0, Q4: 0 };
+      const confRank = { 'A*': 0, 'A': 0, 'B': 0, 'C': 0 };
+      let totalJournals = 0;
+      let totalConfs = 0;
+      let totalOther = 0;
+
+      // Collect unique source IDs for batch source fetch
+      const sourceIds = new Set();
+      const workSourceMap = new Map();
+      for (const w of allWorks) {
+        const srcId = w.primary_location?.source?.id;
+        const srcType = w.primary_location?.source?.type || '';
+        const srcName = w.primary_location?.source?.display_name || '';
+        if (srcId && srcType === 'journal') {
+          sourceIds.add(srcId.replace('https://openalex.org/', ''));
+          workSourceMap.set(w.id, srcId.replace('https://openalex.org/', ''));
+        } else if (srcType === 'conference' || w.type === 'proceedings-article') {
+          // Try CORE lookup
+          const coreMatch = lookupCOREConference(srcName);
+          if (coreMatch && confRank.hasOwnProperty(coreMatch.rank)) {
+            confRank[coreMatch.rank]++;
+          }
+          totalConfs++;
+        } else {
+          totalOther++;
+        }
+      }
+
+      // Batch fetch source stats (for journal quartile estimation)
+      if (statusEl) statusEl.textContent = `Analyzing journal quartiles...`;
+      const sourceBatches = [...sourceIds];
+      const sourceStats = new Map();
+      for (let i = 0; i < sourceBatches.length; i += batchSize) {
+        const batch = sourceBatches.slice(i, i + batchSize);
+        const filter = batch.join('|');
+        try {
+          const data = await fetchOpenAlex(`/sources?filter=openalex:${filter}&select=id,summary_stats&per_page=50`);
+          for (const s of (data.results || [])) {
+            const sid = s.id.replace('https://openalex.org/', '');
+            sourceStats.set(sid, s.summary_stats?.['2yr_mean_citedness'] || 0);
+          }
+        } catch (e) {
+          console.warn('Source batch error:', e);
+        }
+      }
+
+      // Classify journals by quartile
+      for (const w of allWorks) {
+        const srcType = w.primary_location?.source?.type || '';
+        if (srcType === 'journal') {
+          totalJournals++;
+          const sid = workSourceMap.get(w.id);
+          if (sid && sourceStats.has(sid)) {
+            const q = estimateQuartile(sourceStats.get(sid));
+            if (q) journalQ[q.label]++;
+          }
+        }
+      }
+
+      // Render donut charts
+      renderRefCharts(journalQ, confRank, totalJournals, totalConfs, totalOther, refs.length, content);
+    }
+
+    function renderRefCharts(journalQ, confRank, totalJournals, totalConfs, totalOther, totalRefs, container) {
+      const jColors = { Q1: '#10b981', Q2: '#f59e0b', Q3: '#f97316', Q4: '#ef4444' };
+      const cColors = { 'A*': '#f59e0b', 'A': '#10b981', 'B': '#3b82f6', 'C': '#6b7280' };
+
+      const jTotal = Object.values(journalQ).reduce((a, b) => a + b, 0);
+      const cTotal = Object.values(confRank).reduce((a, b) => a + b, 0);
+
+      const jGradient = buildDonutGradient(journalQ, jColors);
+      const cGradient = buildDonutGradient(confRank, cColors);
+
+      container.innerHTML = `
+        <div class="refs-dashboard">
+          <div class="chart-card">
+            <div class="chart-title">Journal Quartile Distribution</div>
+            <div class="donut-chart" style="background: ${jGradient};">
+              <div class="donut-inner">
+                <div class="donut-total">${jTotal}</div>
+                <div class="donut-label">Journals</div>
+              </div>
+            </div>
+            <div class="chart-legend">
+              ${Object.entries(journalQ).map(([k, v]) => `
+                <span class="legend-item">
+                  <span class="legend-color" style="background: ${jColors[k]}"></span>
+                  ${k}: ${v} ${jTotal > 0 ? `(${Math.round(v/jTotal*100)}%)` : ''}
+                </span>
+              `).join('')}
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Conference Rank Distribution</div>
+            <div class="donut-chart" style="background: ${cGradient};">
+              <div class="donut-inner">
+                <div class="donut-total">${cTotal}</div>
+                <div class="donut-label">Conferences</div>
+              </div>
+            </div>
+            <div class="chart-legend">
+              ${Object.entries(confRank).map(([k, v]) => `
+                <span class="legend-item">
+                  <span class="legend-color" style="background: ${cColors[k]}"></span>
+                  ${k}: ${v} ${cTotal > 0 ? `(${Math.round(v/cTotal*100)}%)` : ''}
+                </span>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+        <table class="refs-summary-table">
+          <tr><th>Category</th><th>Count</th><th>% of Total</th></tr>
+          <tr><td>📰 Journal articles</td><td>${totalJournals}</td><td>${totalRefs > 0 ? Math.round(totalJournals/totalRefs*100) : 0}%</td></tr>
+          <tr><td>🎤 Conference papers</td><td>${totalConfs}</td><td>${totalRefs > 0 ? Math.round(totalConfs/totalRefs*100) : 0}%</td></tr>
+          <tr><td>📦 Other (books, preprints, etc.)</td><td>${totalOther}</td><td>${totalRefs > 0 ? Math.round(totalOther/totalRefs*100) : 0}%</td></tr>
+          <tr style="font-weight: 600;"><td>Total references</td><td>${totalRefs}</td><td>100%</td></tr>
+        </table>
+      `;
+    }
+
+    function buildDonutGradient(data, colors) {
+      const total = Object.values(data).reduce((a, b) => a + b, 0);
+      if (total === 0) return '#1f2937';
+
+      let segments = [];
+      let cumulative = 0;
+      for (const [key, val] of Object.entries(data)) {
+        if (val === 0) continue;
+        const start = cumulative;
+        const end = cumulative + (val / total) * 100;
+        segments.push(`${colors[key]} ${start.toFixed(1)}% ${end.toFixed(1)}%`);
+        cumulative = end;
+      }
+      if (segments.length === 0) return '#1f2937';
+      return `conic-gradient(${segments.join(', ')})`;
     }
 
     // ===================== UI HELPERS =====================
