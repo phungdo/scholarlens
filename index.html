@@ -3111,17 +3111,28 @@
               });
             } catch (e) {
               console.warn('Could not fetch author:', e);
-            }
-          } else if (workData.is_fallback) {
-             // Mock author data from Crossref payload
-             authorInfos.push({
-                display_name: authorship.author.display_name,
-                works_count: '?',
-                cited_by_count: '?',
+              // Fallback: use basic info from authorship even if fetch fails
+              authorInfos.push({
+                display_name: authorship.author?.display_name || authorship.raw_author_name || 'Unknown',
+                orcid: authorship.author?.orcid || null,
+                id: authorId,
                 position: authorship.author_position,
                 institutions: authorship.institutions,
-                is_corresponding: authorship.is_corresponding
-             });
+                is_corresponding: authorship.is_corresponding,
+                _partial: true
+              });
+            }
+          } else {
+            // No OpenAlex author ID — create basic card from authorship metadata
+            authorInfos.push({
+              display_name: authorship.author?.display_name || authorship.raw_author_name || 'Unknown',
+              orcid: authorship.author?.orcid || null,
+              id: null,
+              position: authorship.author_position,
+              institutions: authorship.institutions,
+              is_corresponding: authorship.is_corresponding,
+              _partial: true
+            });
           }
         }
 
@@ -3554,7 +3565,7 @@
               <div class="author-links">
                 ${orcid ? `<a href="${orcid}" target="_blank" class="author-link">ORCID</a>` : ''}
                 <a href="https://scholar.google.com/scholar?q=${encodeURIComponent(author.display_name || '')}" target="_blank" class="author-link">Google Scholar</a>
-                <a href="${author.id}" target="_blank" class="author-link">OpenAlex</a>
+                ${author.id ? `<a href="${author.id}" target="_blank" class="author-link">OpenAlex</a>` : `<a href="https://openalex.org/authors?search=${encodeURIComponent(author.display_name || '')}" target="_blank" class="author-link">OpenAlex</a>`}
               </div>
             </div>
             <div class="author-name">${escapeHtml(author.display_name || 'Unknown')}</div>
@@ -3572,14 +3583,15 @@
                   <div class="author-metric-label">i10-index</div>
                 </div>
               ` : ''}
-              <div class="author-metric">
+              ${(citedBy && citedBy !== '?') ? `<div class="author-metric">
                 <div class="author-metric-value">${citedBy.toLocaleString()}</div>
                 <div class="author-metric-label">Citations</div>
-              </div>
-              <div class="author-metric">
+              </div>` : ''}
+              ${(worksCount && worksCount !== '?') ? `<div class="author-metric">
                 <div class="author-metric-value">${worksCount.toLocaleString()}</div>
                 <div class="author-metric-label">Works</div>
-              </div>
+              </div>` : ''}
+              ${author._partial ? `<div style="color:var(--text-muted); font-size:11px; font-style:italic; width:100%; text-align:center; padding:4px 0;">Metrics unavailable — use links above to search</div>` : ''}
             </div>
           </div>
         `;
