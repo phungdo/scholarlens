@@ -3449,13 +3449,15 @@
       }
 
       if (coreRanking) {
-        const coreUrl = `https://portal.core.edu.au/conf-ranks/?search=${encodeURIComponent(work.primary_location?.source?.display_name || '')}&by=all&source=all&sort=atitle&page=1`;
+        const coreSearchName = coreRanking.title || work.primary_location?.source?.display_name || work.primary_location?.raw_source_name || '';
+        const coreUrl = `https://portal.core.edu.au/conf-ranks/?search=${encodeURIComponent(coreSearchName)}&by=all&source=all&sort=atitle&page=1`;
         sourcePills += `<a href="${coreUrl}" target="_blank" class="stat-pill stat-pill-link" title="CORE Rank: ${escapeHtml(coreRanking.title)} — A* top tier">
           <span class="stat-val stat-core-${coreRanking.rank === 'A*' ? 'astar' : coreRanking.rank.toLowerCase()}">${escapeHtml(coreRanking.rank)}</span>
           <span class="stat-key">CORE</span>
         </a>`;
       } else if (isConfType) {
-        const coreUrl = `https://portal.core.edu.au/conf-ranks/?search=${encodeURIComponent(work.primary_location?.source?.display_name || '')}&by=all&source=all&sort=atitle&page=1`;
+        const coreSearchName2 = work.primary_location?.source?.display_name || work.primary_location?.raw_source_name || '';
+        const coreUrl = `https://portal.core.edu.au/conf-ranks/?search=${encodeURIComponent(coreSearchName2)}&by=all&source=all&sort=atitle&page=1`;
         sourcePills += `<a href="${coreUrl}" target="_blank" class="stat-pill stat-pill-link" title="Not found in local CORE database — click to search">
           <span class="stat-val" style="color:var(--text-muted);">—</span>
           <span class="stat-key">CORE</span>
