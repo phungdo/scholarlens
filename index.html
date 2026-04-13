@@ -3118,7 +3118,9 @@
         const sourceType = workData.primary_location?.source?.type || '';
         const isConferenceType = sourceType === 'conference' || 
                                  workData.type === 'proceedings-article' ||
-                                 workData.type === 'proceedings';
+                                 workData.type === 'proceedings' ||
+                                 workData.primary_location?.raw_type === 'proceedings-article' ||
+                                 workData.type_crossref === 'proceedings-article';
 
         // Only try CORE matching for conference/proceedings sources
         if (isConferenceType) {
@@ -3222,8 +3224,12 @@
 
     function renderPaperHeader(work, doi) {
       const container = document.getElementById('paper-header-content');
-      const sourceType = work.primary_location?.source?.type || 'unknown';
-      const sourceName = work.primary_location?.source?.display_name || 'Unknown';
+      let sourceType = work.primary_location?.source?.type || '';
+      if (!sourceType && (work.type === 'proceedings-article' || work.type === 'proceedings' || work.primary_location?.raw_type === 'proceedings-article' || work.type_crossref === 'proceedings-article')) {
+        sourceType = 'conference';
+      }
+      if (!sourceType) sourceType = 'unknown';
+      let sourceName = work.primary_location?.source?.display_name || work.primary_location?.raw_source_name || 'Unknown';
       const year = work.publication_year || '';
       const oaStatus = work.open_access?.oa_status || 'closed';
       const citedBy = work.cited_by_count || 0;
