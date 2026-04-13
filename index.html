@@ -5,8 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ScholarLens — Academic Paper Quality Checker</title>
   <meta name="description" content="Instantly check journal rankings, conference rankings, and author h-index from a DOI or uploaded PDF. Free tool powered by OpenAlex.">
+  <meta name="theme-color" content="#FAFAF8">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;400;500;600;700;1,9..40,400&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="core_rankings.js"></script>
@@ -45,7 +48,7 @@
       --radius-md: 12px;
       --radius-lg: 16px;
       --radius-xl: 20px;
-      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition: background 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* ===================== RESET & BASE ===================== */
@@ -222,13 +225,13 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 14px;
       transition: var(--transition);
-      outline: none;
     }
 
-    #doi-input:focus {
+    #doi-input:focus-visible {
       border-color: var(--border-focus);
       box-shadow: 0 0 0 3px rgba(191, 90, 30, 0.12);
       background: #FFFFFF;
+      outline: none;
     }
 
     #doi-input::placeholder {
@@ -433,6 +436,15 @@
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Respect reduced motion preference */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
     }
 
     /* Paper Header Card */
@@ -901,6 +913,10 @@
       border-radius: var(--radius-md);
       cursor: pointer;
       transition: var(--transition);
+      width: 100%;
+      text-align: left;
+      font: inherit;
+      color: inherit;
     }
 
     .history-item:hover {
@@ -1403,16 +1419,18 @@
       gap: 6px;
     }
     .pdf-nav-btn, .pdf-zoom-btn {
-      width: 28px; height: 28px;
+      min-width: 28px; height: 28px;
+      padding: 0 8px;
       border: 1px solid var(--border-subtle);
       border-radius: 6px;
       background: var(--bg-card);
       color: var(--text-primary);
-      font-size: 16px;
+      font-size: 12px;
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: var(--transition);
       font-family: inherit;
+      white-space: nowrap;
     }
     .pdf-nav-btn:hover:not(:disabled), .pdf-zoom-btn:hover {
       background: var(--bg-secondary);
@@ -1611,12 +1629,13 @@
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-sm);
       background: var(--bg-input);
-      outline: none;
       min-width: 120px;
       max-width: 250px;
     }
-    .pdf-search-bar input:focus {
+    .pdf-search-bar input:focus-visible {
       border-color: var(--accent-indigo);
+      box-shadow: 0 0 0 3px rgba(191, 90, 30, 0.12);
+      outline: none;
     }
     .pdf-search-nav {
       padding: 3px 8px;
@@ -2016,7 +2035,7 @@
     body.dashboard-mode .chart-card {
       padding: 8px 10px;
     }
-    body.dashboard-mode .chart-card-title {
+    body.dashboard-mode .chart-title {
       font-size: 9px;
       margin-bottom: 4px;
     }
@@ -2106,8 +2125,9 @@
         <div class="doi-input-group">
           <div class="doi-input-wrapper">
             <span class="input-icon">🔗</span>
-            <input type="text" id="doi-input" 
+            <input type="text" id="doi-input"
                    placeholder="Paste DOI, e.g. 10.1371/journal.pone.0313495"
+                   aria-label="DOI input"
                    autocomplete="off" spellcheck="false">
           </div>
           <button class="btn-primary" id="lookup-btn" onclick="handleDOILookup()">
@@ -2115,7 +2135,7 @@
           </button>
         </div>
         <p style="font-size:13px;color:var(--text-muted);margin:-4px 0 10px;padding-left:2px;">
-          A DOI is the paper's unique ID — looks like <code style="font-family:'JetBrains Mono',monospace;font-size:12px;">10.1234/...</code> and is printed on the first page of most papers.
+          A DOI is the paper's unique ID — looks like <code style="font-family:'JetBrains Mono',monospace;font-size:12px;">10.1234/…</code> and is printed on the first page of most papers.
         </p>
         <div class="quick-examples">
           <span class="quick-examples-label">Try:</span>
@@ -2141,7 +2161,7 @@
           <div class="drop-zone-hint">We'll extract the DOI automatically from the PDF text</div>
           <div class="pdf-filename" id="pdf-filename"></div>
         </div>
-        <input type="file" id="pdf-file-input" accept=".pdf" onchange="handleFileSelect(event)">
+        <input type="file" id="pdf-file-input" accept=".pdf" aria-label="Upload PDF file" onchange="handleFileSelect(event)">
       </div>
     </section>
 
@@ -2214,18 +2234,18 @@
                 <button class="pdf-export-btn" id="pdf-export-btn" onclick="exportAnnotatedPdf()" style="margin-right: 12px; display: none;">⬇ Export PDF</button>
                 <button class="pdf-zoom-btn" id="pdf-search-toggle" onclick="togglePdfSearch()" title="Search in PDF (Ctrl+F)">Search</button>
                 <span class="pdf-file-info" id="pdf-file-info"></span>
-                <button class="pdf-zoom-btn" onclick="pdfZoom(-0.15)">−</button>
+                <button class="pdf-zoom-btn" onclick="pdfZoom(-0.15)" aria-label="Zoom out">−</button>
                 <span class="pdf-zoom-info" id="pdf-zoom-info">Fit</span>
-                <button class="pdf-zoom-btn" onclick="pdfZoom(0.15)">+</button>
+                <button class="pdf-zoom-btn" onclick="pdfZoom(0.15)" aria-label="Zoom in">+</button>
                 <button class="pdf-zoom-btn" onclick="pdfFitWidth()" title="Fit to width">Fit</button>
               </div>
             </div>
             <div class="pdf-search-bar" id="pdf-search-bar">
-              <input type="text" id="pdf-search-input" placeholder="Search in PDF..." oninput="performPdfSearch(this.value)" />
+              <input type="text" id="pdf-search-input" name="pdf-search" placeholder="Search in PDF…" aria-label="Search in PDF" oninput="performPdfSearch(this.value)" />
               <button class="pdf-search-nav" onclick="navigateSearchResult(-1)">Prev</button>
               <button class="pdf-search-nav" onclick="navigateSearchResult(1)">Next</button>
               <span class="pdf-search-info" id="pdf-search-info"></span>
-              <button class="pdf-search-close" onclick="togglePdfSearch()">✕</button>
+              <button class="pdf-search-close" onclick="togglePdfSearch()" aria-label="Close search">✕</button>
             </div>
             <div class="pdf-canvas-wrap" id="pdf-canvas-wrap">
               <div class="pdf-placeholder" id="pdf-placeholder">
@@ -2720,7 +2740,7 @@
       
       popup.innerHTML = `
         <div style="font-size: 11px; font-weight: 600; color: var(--accent-indigo);">Add Note to Highlight</div>
-        <textarea id="annotation-note" placeholder="Type your notes here..."></textarea>
+        <textarea id="annotation-note" name="annotation-note" placeholder="Type your notes here…" aria-label="Annotation note"></textarea>
         <div class="popup-actions">
           <button class="popup-btn secondary" id="btn-cancel-note">Cancel</button>
           <button class="popup-btn primary" id="btn-save-note">Save Bounding Box</button>
@@ -2953,7 +2973,7 @@
           loadPdfIntoViewer(pdfViewerArrayBuffer.slice(0), file.name);
         } else {
           hideLoading();
-          showError('Could not find a DOI in this PDF. DOIs look like 10.1234/... and are printed on the first page of most papers. Try copying it from the paper and pasting it in the DOI Lookup tab.');
+          showError('Could not find a DOI in this PDF. DOIs look like 10.1234/… and are printed on the first page of most papers. Try copying it from the paper and pasting it in the DOI Lookup tab.');
         }
       } catch (err) {
         hideLoading();
@@ -3762,14 +3782,14 @@
         const timeAgo = getTimeAgo(item.timestamp);
 
         html += `
-          <div class="history-item" onclick="fillDOI('${escapeHtml(item.doi)}')">
+          <button class="history-item" onclick="fillDOI('${escapeHtml(item.doi)}')">
             <div class="history-item-rank" style="background: ${rankBg}">${rankText}</div>
             <div class="history-item-info">
               <div class="history-item-title">${escapeHtml(item.title)}</div>
               <div class="history-item-meta">${escapeHtml(item.source)} ${item.year ? '• ' + item.year : ''}</div>
             </div>
             <div class="history-item-time">${timeAgo}</div>
-          </div>
+          </button>
         `;
       }
       list.innerHTML = html;
