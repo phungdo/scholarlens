@@ -2942,10 +2942,11 @@
         allMatches.sort((a, b) => b.length - a.length);
 
         if (allMatches.length > 0) {
-          // Clean up the DOI (remove trailing punctuation and concatenated words)
+          // Clean up the DOI (remove trailing concatenated words and punctuation)
           let doi = allMatches[0]
-            .replace(/(\d)[a-z]{2,}$/i, '$1')  // Strip words glued to digits from no-space join (e.g. "3764606by" → "3764606")
-            .replace(/[.,;:)\]]+$/, '');        // Strip trailing punctuation
+            .replace(/(\d)[A-Z][a-zA-Z\-]+.*$/, '$1')  // Strip UpperCase-starting words glued to digits (e.g. "3768281Keywordsland-sea" → "3768281")
+            .replace(/(\d)[a-z]{2,}$/, '$1')            // Strip lowercase words glued to digits (e.g. "3764606by" → "3764606")
+            .replace(/[.,;:)\]]+$/, '');                 // Strip trailing punctuation
           document.getElementById('doi-input').value = doi;
           await performLookup(doi);
           // Load the uploaded PDF into the viewer
