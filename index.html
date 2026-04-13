@@ -3413,8 +3413,11 @@
 
       // ── Group 2: Journal / Conference ──
       let sourcePills = '';
-      const sourceType = work.primary_location?.source?.type || '';
-      const isConfType = sourceType === 'conference' || work.type === 'proceedings-article' || work.type === 'proceedings';
+      let sourceType = work.primary_location?.source?.type || '';
+      if (!sourceType && (work.type === 'proceedings-article' || work.type === 'proceedings' || work.primary_location?.raw_type === 'proceedings-article' || work.type_crossref === 'proceedings-article')) {
+        sourceType = 'conference';
+      }
+      const isConfType = sourceType === 'conference';
 
       if (source) {
         const impactProxy = source.summary_stats?.['2yr_mean_citedness'];
