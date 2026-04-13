@@ -696,6 +696,19 @@
       align-items: center;
       gap: 8px;
     }
+    
+    .section-warning {
+      font-size: 10px;
+      font-weight: 500;
+      color: #9c6e00;
+      background: #fff3cd;
+      border: 1px solid #ffeeba;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: auto; /* push to the right */
+      letter-spacing: 0;
+      text-transform: none;
+    }
 
     .authors-grid {
       display: grid;
@@ -1863,6 +1876,10 @@
       font-size: 12px;
       margin-bottom: 6px;
     }
+    body.dashboard-mode .section-warning {
+      font-size: 8px;
+      padding: 1px 5px;
+    }
     body.dashboard-mode .funding-item {
       padding: 5px 8px;
     }
@@ -2176,7 +2193,10 @@
 
           <!-- Authors -->
           <div class="authors-section" id="authors-section">
-            <div class="section-title">👤 Key Authors</div>
+            <div class="section-title">
+              <span>👤 Key Authors</span>
+              <span class="section-warning" title="OpenAlex author entity mapping can occasionally be imperfect">⚠️ extracted automatically from OpenAlex, double check again</span>
+            </div>
             <div class="authors-grid" id="authors-grid"></div>
           </div>
 
