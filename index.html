@@ -1751,12 +1751,18 @@
     .stat-core-b { color: #f57c00 !important; }
     .stat-core-c { color: var(--text-muted) !important; }
 
-    /* Metrics two-group layout */
+    /* Metrics two-group layout — horizontal */
+    body.dashboard-mode .metrics-grid {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+    }
     .metrics-group {
-      width: 100%;
+      flex: 1;
       display: flex;
       flex-direction: column;
       gap: 4px;
+      min-width: 0;
     }
     .metrics-group-label {
       font-size: 9px;
@@ -1776,12 +1782,11 @@
     .metrics-group-pills {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 4px;
     }
     body.dashboard-mode .metrics-group + .metrics-group {
-      margin-top: 4px;
-      padding-top: 6px;
-      border-top: 1px solid var(--border-subtle);
+      padding-left: 10px;
+      border-left: 1px solid var(--border-subtle);
     }
     body.dashboard-mode .metric-card {
       padding: 10px;
