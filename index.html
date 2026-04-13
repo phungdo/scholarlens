@@ -2329,8 +2329,10 @@
         
         ctx.scale(pixelRatio, pixelRatio);
         
-        // Render Canvas
-        page.render({ canvasContext: ctx, viewport: viewport });
+        // Render Canvas sequentially to prevent memory/worker conflicts on some pages
+        const renderContext = { canvasContext: ctx, viewport: viewport };
+        const renderTask = page.render(renderContext);
+        await renderTask.promise;
 
         // Render Text Layer
         page.getTextContent().then(textContent => {
