@@ -2919,6 +2919,7 @@
 
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         let fullText = '';
+        let fullTextNoSpaces = '';
 
         // Extract text from first 3 pages (DOI is usually on first page)
         const maxPages = Math.min(pdf.numPages, 3);
@@ -2926,16 +2927,23 @@
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
           const pageText = textContent.items.map(item => item.str).join(' ');
+          const pageTextNoSpaces = textContent.items.map(item => item.str).join('');
           fullText += pageText + ' ';
+          fullTextNoSpaces += pageTextNoSpaces + ' ';
         }
 
-        // Find DOI using regex
+        // Find DOI using regex — try both space-joined and no-space-joined text
+        // PDF.js can split DOIs across text items (e.g. "10.1145/3748636" + ".3764606")
         const doiRegex = /10\.\d{4,9}\/[^\s\]"'>)},;]+/gi;
-        const matches = fullText.match(doiRegex);
+        const matches = fullText.match(doiRegex) || [];
+        const matchesNoSpaces = fullTextNoSpaces.match(doiRegex) || [];
+        // Pick the longest DOI found (most complete)
+        const allMatches = [...matches, ...matchesNoSpaces];
+        allMatches.sort((a, b) => b.length - a.length);
 
-        if (matches && matches.length > 0) {
+        if (allMatches.length > 0) {
           // Clean up the DOI (remove trailing punctuation)
-          let doi = matches[0].replace(/[.,;:)\]]+$/, '');
+          let doi = allMatches[0].replace(/[.,;:)\]]+$/, '');
           document.getElementById('doi-input').value = doi;
           await performLookup(doi);
           // Load the uploaded PDF into the viewer
