@@ -1903,7 +1903,18 @@ function lookupCOREConference(query) {
     }
   }
 
-  // 3. Word-boundary acronym in query (3+ chars to avoid false positives)
+  // 3. Full title match - require significant overlap (More specific than fuzzy acronyms)
+  const ql = query.trim().toLowerCase();
+  if (ql.length >= 10) {
+    for (const [title, data] of Object.entries(CORE_TITLE_INDEX)) {
+      if (ql.includes(title) && title.length >= 20) return { ...data, acronym: data.acronym || Object.keys(CORE_RANKINGS).find(k => CORE_RANKINGS[k] === data) };
+    }
+    for (const [title, data] of Object.entries(CORE_TITLE_INDEX)) {
+      if (title.includes(ql) && ql.length >= 15) return { ...data, acronym: data.acronym || Object.keys(CORE_RANKINGS).find(k => CORE_RANKINGS[k] === data) };
+    }
+  }
+
+  // 4. Word-boundary acronym in query (3+ chars) - Fallback
   for (const [acronym, data] of Object.entries(CORE_RANKINGS)) {
     if (acronym.length >= 3) {
       try {
@@ -1913,17 +1924,6 @@ function lookupCOREConference(query) {
           return { ...data, acronym };
         }
       } catch(e) { /* skip invalid regex */ }
-    }
-  }
-
-  // 4. Full title match - require significant overlap
-  const ql = query.trim().toLowerCase();
-  if (ql.length >= 10) {
-    for (const [title, data] of Object.entries(CORE_TITLE_INDEX)) {
-      if (ql.includes(title) && title.length >= 20) return data;
-    }
-    for (const [title, data] of Object.entries(CORE_TITLE_INDEX)) {
-      if (title.includes(ql) && ql.length >= 15) return data;
     }
   }
 
