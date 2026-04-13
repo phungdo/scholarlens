@@ -1403,16 +1403,18 @@
       gap: 6px;
     }
     .pdf-nav-btn, .pdf-zoom-btn {
-      width: 28px; height: 28px;
+      min-width: 28px; height: 28px;
+      padding: 0 8px;
       border: 1px solid var(--border-subtle);
       border-radius: 6px;
       background: var(--bg-card);
       color: var(--text-primary);
-      font-size: 16px;
+      font-size: 12px;
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: var(--transition);
       font-family: inherit;
+      white-space: nowrap;
     }
     .pdf-nav-btn:hover:not(:disabled), .pdf-zoom-btn:hover {
       background: var(--bg-secondary);
@@ -2016,7 +2018,7 @@
     body.dashboard-mode .chart-card {
       padding: 8px 10px;
     }
-    body.dashboard-mode .chart-card-title {
+    body.dashboard-mode .chart-title {
       font-size: 9px;
       margin-bottom: 4px;
     }
