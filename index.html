@@ -716,6 +716,21 @@
       transform: translateY(-1px);
     }
 
+    .author-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .author-card-header .author-position {
+      margin-bottom: 0;
+    }
+
+    .author-card-header .author-links {
+      margin-top: 0;
+    }
+
     .author-position {
       font-size: 11px;
       font-weight: 600;
@@ -1891,8 +1906,11 @@
     body.dashboard-mode .author-metric-label {
       font-size: 8px;
     }
+    body.dashboard-mode .author-card-header {
+      margin-bottom: 2px;
+    }
     body.dashboard-mode .author-links {
-      margin-top: 4px;
+      margin-top: 2px;
       gap: 3px;
     }
     body.dashboard-mode .author-links a {
@@ -3372,7 +3390,14 @@
 
         cards += `
           <div class="author-card">
-            <div class="author-position">${positionLabel}${author.is_corresponding ? ' • ✉️ Corresponding' : ''}</div>
+            <div class="author-card-header">
+              <div class="author-position">${positionLabel}${author.is_corresponding ? ' • ✉️ Corresponding' : ''}</div>
+              <div class="author-links">
+                ${orcid ? `<a href="${orcid}" target="_blank" class="author-link">ORCID</a>` : ''}
+                <a href="https://scholar.google.com/scholar?q=${encodeURIComponent(author.display_name || '')}" target="_blank" class="author-link">Scholar</a>
+                <a href="${author.id}" target="_blank" class="author-link">OpenAlex</a>
+              </div>
+            </div>
             <div class="author-name">${escapeHtml(author.display_name || 'Unknown')}</div>
             <div class="author-institution">${institution ? escapeHtml(institution.display_name || '') : 'Institution unknown'}</div>
             <div class="author-metrics">
@@ -3396,11 +3421,6 @@
                 <div class="author-metric-value">${worksCount.toLocaleString()}</div>
                 <div class="author-metric-label">Works</div>
               </div>
-            </div>
-            <div class="author-links">
-              ${orcid ? `<a href="${orcid}" target="_blank" class="author-link">ORCID</a>` : ''}
-              <a href="https://scholar.google.com/scholar?q=${encodeURIComponent(author.display_name || '')}" target="_blank" class="author-link">Google Scholar</a>
-              <a href="${author.id}" target="_blank" class="author-link">OpenAlex</a>
             </div>
           </div>
         `;
