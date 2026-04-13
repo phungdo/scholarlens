@@ -3279,23 +3279,40 @@
       if (!container) return;
       const statusSpan = document.getElementById('kw-loading-status');
 
-      const renderFallback = () => {
+      const renderFallback = async () => {
         if (statusSpan) statusSpan.remove();
+        
+        try {
+          const s2Res = await fetch(`https://api.semanticscholar.org/graph/v1/paper/DOI:${doi}?fields=s2FieldsOfStudy,fieldsOfStudy`);
+          if (s2Res.ok) {
+            const s2Data = await s2Res.json();
+            let items = [...(s2Data.fieldsOfStudy || []), ...(s2Data.s2FieldsOfStudy?.map(f => f.category) || [])];
+            items = [...new Set(items)]; // unique
+            
+            if (items.length > 0) {
+              const html = items.map(item => {
+                const url = `https://www.semanticscholar.org/search?q=${encodeURIComponent(item)}`;
+                return `<a href="${url}" target="_blank" class="topic-badge" style="text-decoration:none;" title="Semantic Scholar fields of study">🧠 ${escapeHtml(item)}</a>`;
+              }).join('');
+              container.insertAdjacentHTML('beforeend', html);
+              return;
+            }
+          }
+        } catch(e) {
+          console.warn('S2 fallback query failed:', e);
+        }
+
+        // Ultimate fallback to OpenAlex if S2 fails or has no keywords
         const paperKeywords = (work.keywords || []).slice(0, 6);
         const topicFallback = (work.topics || []).slice(0, 3);
         const items = paperKeywords.length > 0 ? paperKeywords : topicFallback;
-        const isKeywords = paperKeywords.length > 0;
-        
         if (items.length === 0) return;
         
         const html = items.map(item => {
           const label = escapeHtml(item.display_name);
-          const url = isKeywords
-            ? `https://openalex.org/keywords/${encodeURIComponent(item.id?.replace('https://openalex.org/keywords/','') || item.display_name)}`
-            : `https://openalex.org/topics/${item.id?.replace('https://openalex.org/','') || ''}`;
+          const url = `https://www.semanticscholar.org/search?q=${encodeURIComponent(item.display_name)}`;
           return `<a href="${url}" target="_blank" class="topic-badge" style="text-decoration:none;" title="Auto-extracted by OpenAlex">🤖 ${label}</a>`;
         }).join('');
-        
         container.insertAdjacentHTML('beforeend', html);
       };
 
