@@ -4,7 +4,7 @@
 
 By simply pasting a **DOI** or dragging and dropping a **PDF file**, ScholarLens automatically extracts metadata and provides a comprehensive dashboard of paper and author metrics without any manual searching.
 
-🔗 **Try it here**: [ScholarLens on GitHub Pages](#) *(Add deployed link here)*
+🔗 **Try it here**: [ScholarLens on GitHub Pages](https://phungdo.github.io/scholarlens/)
 
 ---
 
