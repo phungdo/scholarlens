@@ -717,7 +717,8 @@
     }
 
     .author-card-header {
-      display: flex;
+      display: flex !important;
+      flex-direction: row !important;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 8px;
@@ -3394,7 +3395,7 @@
               <div class="author-position">${positionLabel}${author.is_corresponding ? ' • ✉️ Corresponding' : ''}</div>
               <div class="author-links">
                 ${orcid ? `<a href="${orcid}" target="_blank" class="author-link">ORCID</a>` : ''}
-                <a href="https://scholar.google.com/scholar?q=${encodeURIComponent(author.display_name || '')}" target="_blank" class="author-link">Scholar</a>
+                <a href="https://scholar.google.com/scholar?q=${encodeURIComponent(author.display_name || '')}" target="_blank" class="author-link">Google Scholar</a>
                 <a href="${author.id}" target="_blank" class="author-link">OpenAlex</a>
               </div>
             </div>
