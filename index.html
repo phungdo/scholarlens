@@ -1787,7 +1787,7 @@
       gap: 10px;
     }
     .metrics-group {
-      flex: 1;
+      flex: 0 0 auto;
       display: flex;
       flex-direction: column;
       gap: 4px;
@@ -3362,6 +3362,25 @@
         </a>`;
       }
 
+      // ── Group 3: Source Metadata ──
+      let metadataPills = '';
+      if (source) {
+        if (source.host_organization_name) {
+          metadataPills += `<div class="stat-pill" title="Publisher: ${escapeHtml(source.host_organization_name)}">
+            <span class="stat-val" style="font-size:13px; max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(source.host_organization_name)}</span>
+            <span class="stat-key">Publisher</span>
+          </div>`;
+        }
+        if (source.is_oa !== undefined && source.is_oa !== null) {
+          const oaText = source.is_oa ? 'Yes' : 'No';
+          const apc = source.apc_usd ? ` ($${source.apc_usd.toLocaleString()})` : '';
+          metadataPills += `<div class="stat-pill" title="Fully Open Access">
+            <span class="stat-val" style="font-size:13px">${oaText}${apc}</span>
+            <span class="stat-key">Fully OA</span>
+          </div>`;
+        }
+      }
+
       // Render with group headers
       let html = `<div class="metrics-group">
         <div class="metrics-group-label">📄 This Paper</div>
@@ -3374,6 +3393,13 @@
         html += `<div class="metrics-group">
           <div class="metrics-group-label"><a href="${sourceLink}" target="_blank" class="metrics-group-label-link">${groupLabel} ↗</a></div>
           <div class="metrics-group-pills">${sourcePills}</div>
+        </div>`;
+      }
+
+      if (metadataPills) {
+        html += `<div class="metrics-group" style="padding-left:10px; border-left:1px solid var(--border-subtle);">
+          <div class="metrics-group-label">ℹ️ Source</div>
+          <div class="metrics-group-pills">${metadataPills}</div>
         </div>`;
       }
 
