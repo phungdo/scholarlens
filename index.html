@@ -778,22 +778,42 @@
     .author-institution {
       color: var(--text-muted);
       font-size: 13px;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
 
     .author-metrics {
       display: flex;
-      gap: 20px;
+      gap: 8px;
+      margin-top: 4px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
     }
 
     .author-metric {
+      flex: 1 1 0;
+      min-width: 0;
       text-align: center;
+      padding: 4px 8px;
+      position: relative;
+    }
+
+    .author-metric + .author-metric::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 28px;
+      width: 1px;
+      background: var(--border-subtle);
     }
 
     .author-metric-value {
       font-size: 22px;
       font-weight: 800;
       color: var(--accent-violet);
+      line-height: 1.1;
+      margin-bottom: 6px;
     }
 
     .author-metric-label {
@@ -801,6 +821,9 @@
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .author-links {
@@ -1980,11 +2003,19 @@
       margin-bottom: 4px;
     }
     body.dashboard-mode .author-metrics {
-      gap: 2px;
+      gap: 4px;
+      padding-top: 6px;
+      margin-top: 2px;
+    }
+    body.dashboard-mode .author-metric {
+      padding: 2px 4px;
+    }
+    body.dashboard-mode .author-metric + .author-metric::before {
+      height: 18px;
     }
     body.dashboard-mode .author-metric-value {
       font-size: 15px;
-      line-height: 1.1;
+      margin-bottom: 2px;
     }
     body.dashboard-mode .author-metric-label {
       font-size: 8px;
