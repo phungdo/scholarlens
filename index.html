@@ -13,6 +13,9 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;400;500;600;700;1,9..40,400&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="core_rankings.js"></script>
+  <script src="citation-trajectory.js"></script>
+  <script src="predatory-list.js"></script>
+  <script src="predatory-checker.js"></script>
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <style>
     /* ===================== DESIGN SYSTEM ===================== */
@@ -775,22 +778,42 @@
     .author-institution {
       color: var(--text-muted);
       font-size: 13px;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
 
     .author-metrics {
       display: flex;
-      gap: 20px;
+      gap: 8px;
+      margin-top: 4px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
     }
 
     .author-metric {
+      flex: 1 1 0;
+      min-width: 0;
       text-align: center;
+      padding: 4px 8px;
+      position: relative;
+    }
+
+    .author-metric + .author-metric::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 28px;
+      width: 1px;
+      background: var(--border-subtle);
     }
 
     .author-metric-value {
       font-size: 22px;
       font-weight: 800;
       color: var(--accent-violet);
+      line-height: 1.1;
+      margin-bottom: 6px;
     }
 
     .author-metric-label {
@@ -798,6 +821,9 @@
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .author-links {
@@ -1013,7 +1039,7 @@
       height: 6px;
       background: var(--bg-secondary);
       border-radius: 3px;
-      margin-top: 8px;
+      margin-top: 6px;
       overflow: hidden;
     }
 
@@ -1022,6 +1048,35 @@
       border-radius: 3px;
       background: var(--gradient-hero);
       transition: width 1s ease;
+    }
+
+    /* Citation Trajectory Sparkline */
+    .sparkline-pill .stat-val {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent-indigo);
+    }
+    .sparkline-pill svg.sparkline { display: block; }
+    .sparkline-pill .trajectory-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+    }
+
+    /* Percentile pill enhancements (field-aware + bar) */
+    .percentile-pill-enhanced .stat-val {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-indigo);
+      max-width: 180px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .percentile-pill-enhanced .percentile-bar {
+      width: 100%;
+      min-width: 80px;
     }
 
     /* ===================== RESPONSIVE ===================== */
@@ -1792,14 +1847,26 @@
       color: var(--text-muted);
       font-weight: 600;
     }
-    .quartile-color-Q1 { color: #2e7d32 !important; }
-    .quartile-color-Q2 { color: #f57c00 !important; }
-    .quartile-color-Q3 { color: #e65100 !important; }
-    .quartile-color-Q4 { color: #c62828 !important; }
+    .quartile-color-Q1 { color: #10b981 !important; }
+    .quartile-color-Q2 { color: #3b82f6 !important; }
+    .quartile-color-Q3 { color: #f97316 !important; }
+    .quartile-color-Q4 { color: #ef4444 !important; }
     .stat-core-astar { color: #b71c1c !important; }
     .stat-core-a { color: #e65100 !important; }
     .stat-core-b { color: #f57c00 !important; }
     .stat-core-c { color: var(--text-muted) !important; }
+
+    /* Predatory / DOAJ verification pills */
+    .stat-pill.pill-warn {
+      border-color: rgba(196, 64, 60, 0.45);
+      background: rgba(196, 64, 60, 0.06);
+    }
+    .stat-pill.pill-warn .stat-val { color: var(--accent-rose); }
+    .stat-pill.pill-verified {
+      border-color: rgba(45, 125, 70, 0.45);
+      background: rgba(45, 125, 70, 0.06);
+    }
+    .stat-pill.pill-verified .stat-val { color: var(--accent-emerald); }
 
     /* Metrics two-group layout — horizontal */
     body.dashboard-mode .metrics-grid {
@@ -1936,11 +2003,19 @@
       margin-bottom: 4px;
     }
     body.dashboard-mode .author-metrics {
-      gap: 2px;
+      gap: 4px;
+      padding-top: 6px;
+      margin-top: 2px;
+    }
+    body.dashboard-mode .author-metric {
+      padding: 2px 4px;
+    }
+    body.dashboard-mode .author-metric + .author-metric::before {
+      height: 18px;
     }
     body.dashboard-mode .author-metric-value {
       font-size: 15px;
-      line-height: 1.1;
+      margin-bottom: 2px;
     }
     body.dashboard-mode .author-metric-label {
       font-size: 8px;
@@ -3102,6 +3177,11 @@
           }
         }
 
+        // Kick off predatory/DOAJ check in parallel with subsequent author fetches
+        const predatoryPromise = (sourceData && window.PredatoryChecker)
+          ? window.PredatoryChecker.checkPredatory(sourceData).catch(() => ({ status: 'none' }))
+          : Promise.resolve({ status: 'none' });
+
         // Step 3: Get author data (first + last authors)
         setLoadingStep('Fetching author profiles...');
         const authorInfos = [];
@@ -3192,10 +3272,12 @@
           }
         }
 
+        const predatoryResult = await predatoryPromise;
+
         hideLoading();
 
         // Render results
-        renderResults(workData, sourceData, authorInfos, coreRanking, doi);
+        renderResults(workData, sourceData, authorInfos, coreRanking, doi, predatoryResult);
 
         // Save to history
         saveToHistory(doi, workData, sourceData, coreRanking);
@@ -3208,7 +3290,7 @@
     }
 
     // ===================== RENDER RESULTS =====================
-    function renderResults(work, source, authors, coreRanking, doi) {
+    function renderResults(work, source, authors, coreRanking, doi, predatoryResult) {
       const resultsSection = document.getElementById('results-section');
 
       // Enter dashboard mode
@@ -3220,8 +3302,8 @@
       // Paper Header (with V2 collaboration badge)
       renderPaperHeader(work, doi);
 
-      // Metrics (with V2 quartile badge)
-      renderMetrics(work, source, coreRanking);
+      // Metrics (with V2 quartile badge + predatory/DOAJ pill)
+      renderMetrics(work, source, coreRanking, predatoryResult);
 
       // V2: Funding Info
       renderFundingInfo(work);
@@ -3423,7 +3505,7 @@
       }
     }
 
-    function renderMetrics(work, source, coreRanking) {
+    function renderMetrics(work, source, coreRanking, predatoryResult) {
       const grid = document.getElementById('metrics-grid');
       const percentile = work.citation_normalized_percentile;
       const fwci = work.fwci;
@@ -3445,12 +3527,23 @@
       }
 
       if (percentile) {
-        const pctVal = (percentile.value * 100).toFixed(1);
+        const pctVal = Number(percentile.value) * 100;
+        const topPct = Math.max(0.1, 100 - pctVal);
+        const topPctLabel = topPct < 1 ? topPct.toFixed(1) : Math.round(topPct);
         const topBadge = percentile.is_in_top_1_percent ? ' 🥇' : percentile.is_in_top_10_percent ? ' 🏆' : '';
-        paperPills += `<div class="stat-pill" title="Citation percentile within its field — cited more than ${pctVal}% of similar papers">
-          <span class="stat-val">${pctVal}%${topBadge}</span>
+        const fieldRaw = work.primary_topic?.field?.display_name || '';
+        const field = fieldRaw.length > 30 ? fieldRaw.slice(0, 29) + '…' : fieldRaw;
+        const fieldSuffix = field ? ` in ${escapeHtml(field)}` : '';
+        const tooltip = `Cited more than ${pctVal.toFixed(1)}% of similar papers${field ? ' in ' + escapeHtml(field) : ''}`;
+        paperPills += `<div class="stat-pill percentile-pill-enhanced" title="${tooltip}">
+          <span class="stat-val">Top ${topPctLabel}%${topBadge}${fieldSuffix}</span>
+          <div class="percentile-bar" aria-hidden="true"><div class="percentile-fill" style="width:${pctVal.toFixed(1)}%"></div></div>
           <span class="stat-key">Percentile</span>
         </div>`;
+      }
+
+      if (window.CitationTrajectory && work.counts_by_year) {
+        paperPills += window.CitationTrajectory.renderTrajectoryPill(work.counts_by_year);
       }
 
       // ── Group 2: Journal / Conference ──
@@ -3471,8 +3564,8 @@
           : `https://www.scimagojr.com/journalsearch.php?q=${encodeURIComponent(source.display_name || '')}&tip=jou`;
 
         if (quartile) {
-          sourcePills += `<a href="${scimagoUrl}" target="_blank" class="stat-pill stat-pill-link" title="Estimated Scimago Quartile — Q1 is top 25%. Click to verify.">
-            <span class="stat-val quartile-color-${quartile.key}">${quartile.label}</span>
+          sourcePills += `<a href="${scimagoUrl}" target="_blank" class="stat-pill stat-pill-link" title="Estimated from 2yr citation rate (${(impactProxy || 0).toFixed(2)}). Verify on Scimago.">
+            <span class="stat-val quartile-color-${quartile.label}">${quartile.label}</span>
             <span class="stat-key">Quartile</span>
           </a>`;
         }
@@ -3487,6 +3580,9 @@
             <span class="stat-val">${hIndex}</span>
             <span class="stat-key">h-index</span>
           </div>`;
+        }
+        if (predatoryResult && window.PredatoryChecker) {
+          sourcePills += window.PredatoryChecker.renderPredatoryPill(predatoryResult);
         }
       }
 
@@ -3811,10 +3907,10 @@
     // ===================== V2: QUARTILE ESTIMATION =====================
     function estimateQuartile(impactProxy) {
       if (impactProxy == null) return null;
-      if (impactProxy >= 3.0) return { key: 'q1', label: 'Q1', color: '#10b981' };
-      if (impactProxy >= 1.5) return { key: 'q2', label: 'Q2', color: '#f59e0b' };
-      if (impactProxy >= 0.5) return { key: 'q3', label: 'Q3', color: '#f97316' };
-      return { key: 'q4', label: 'Q4', color: '#ef4444' };
+      if (impactProxy >= 3.0) return { label: 'Q1' };
+      if (impactProxy >= 1.5) return { label: 'Q2' };
+      if (impactProxy >= 0.5) return { label: 'Q3' };
+      return { label: 'Q4' };
     }
 
     // ===================== V2: COLLABORATION TYPE =====================

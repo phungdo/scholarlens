@@ -25,6 +25,9 @@ Currently, evaluating the quality of an academic paper is a tedious, multi-step 
 - **CORE Conference Rankings**: Built-in curated database of major Computer Science/Engineering conferences (A*, A, B, C rankings) bypassing the need to search the CORE portal manually.
 - **Author Profiles**: Displays the h-index, institution, and position (first, last, corresponding) of key authors directly on the dashboard.
 - **Open Access Status**: Instantly see if the paper is Gold, Green, Bronze, or Closed access.
+- **Citation Trajectory**: Sparkline SVG with Rising/Stable/Declining label showing year-by-year citation trend from OpenAlex data.
+- **Predatory Journal Detection**: Two-signal badge — warns against publishers/journals on the Beall's list (1162 publishers + 1309 journals) and confirms DOAJ listing via live API check (cached 30 days).
+- **Field Percentile**: Pill shows "Top X% in {Field}" with a mini filled bar using OpenAlex primary topic data.
 - **100% Client-Side Private**: No backend server. Your PDFs and research stay locally in your browser. Powered by the open-source OpenAlex API.
 
 ## 🛠️ Technology Stack
@@ -34,7 +37,9 @@ Currently, evaluating the quality of an academic paper is a tedious, multi-step 
 - **Data APIs**:
   - [OpenAlex API](https://openalex.org/) (Primary source for metadata, citations, and h-indices)
   - CrossRef API (Fallback DOI resolution)
+  - [DOAJ API](https://doaj.org/) (Predatory detection — confirms legitimate open access journals)
 - **Rankings Database**: Local JavaScript object compiled from CORE portal subsets.
+- **Predatory List**: Bundled static data from `stop-predatory-journals` community mirror (Beall's list).
 
 ## 🏃‍♂️ How to Run Locally
 
